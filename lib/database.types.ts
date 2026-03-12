@@ -199,6 +199,11 @@ export interface Database {
         Insert: Omit<LettuceWaitlist, "id" | "created_at">;
         Update: Partial<Omit<LettuceWaitlist, "id" | "created_at">>;
       };
+      site_settings: {
+        Row: { key: string; value: unknown; updated_at: string };
+        Insert: { key: string; value: unknown; updated_at?: string };
+        Update: Partial<{ key: string; value: unknown; updated_at: string }>;
+      };
     };
     Enums: {
       holiday_type: HolidayType;

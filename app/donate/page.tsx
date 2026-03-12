@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getSetting } from "@/lib/queries/settings";
 import { DonationPageForm } from "@/components/forms/donation-page-form";
 
 export const metadata: Metadata = {
@@ -7,7 +8,11 @@ export const metadata: Metadata = {
     "Support Yeshiva of Miami's Yom Tov services in the Orlando villa resort area with a tax-deductible donation.",
 };
 
-export default function DonatePage() {
+export const dynamic = "force-dynamic";
+
+export default async function DonatePage() {
+  const donationPresets = await getSetting("donation_presets");
+
   return (
     <div className="container py-12 md:py-20">
       <div className="text-center mb-10">
@@ -19,7 +24,7 @@ export default function DonatePage() {
           community in the Orlando villa resort area.
         </p>
       </div>
-      <DonationPageForm />
+      <DonationPageForm presetAmounts={donationPresets} />
     </div>
   );
 }

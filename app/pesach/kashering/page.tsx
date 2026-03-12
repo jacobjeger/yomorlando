@@ -1,4 +1,5 @@
 import { getOpenEventForHoliday } from "@/lib/queries/events";
+import { getAllSettings } from "@/lib/queries/settings";
 import { KasheringForm } from "@/components/forms/kashering-form";
 import type { Metadata } from "next";
 
@@ -10,7 +11,10 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function KasheringPage() {
-  const event = await getOpenEventForHoliday("pesach");
+  const [event, settings] = await Promise.all([
+    getOpenEventForHoliday("pesach"),
+    getAllSettings(),
+  ]);
 
   if (!event) {
     return (
@@ -36,6 +40,9 @@ export default async function KasheringPage() {
         eventId={event.id}
         eventStartDate={event.start_date}
         eventEndDate={event.end_date}
+        developments={settings.kashering_developments}
+        kasheringPricing={settings.kashering_pricing}
+        surchargeRate={settings.surcharge_rate.rate}
       />
     </div>
   );

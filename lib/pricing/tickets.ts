@@ -1,6 +1,7 @@
 import type { TicketOption } from "@/lib/database.types";
 import type { TicketSelection } from "@/lib/validations/tickets";
-import { DELIVERY_OPTIONS } from "@/lib/validations/tickets";
+import type { DeliveryOption } from "@/lib/settings-defaults";
+import { DEFAULT_SETTINGS } from "@/lib/settings-defaults";
 
 export function calculateTicketsTotal(params: {
   selections: Record<string, TicketSelection>;
@@ -8,8 +9,18 @@ export function calculateTicketsTotal(params: {
   deliveryMethod: string;
   donationDollars: number;
   addSurcharge: boolean;
+  deliveryOptions?: DeliveryOption[];
+  surchargeRate?: number;
 }) {
-  const { selections, optionsMap, deliveryMethod, donationDollars, addSurcharge } = params;
+  const {
+    selections,
+    optionsMap,
+    deliveryMethod,
+    donationDollars,
+    addSurcharge,
+    deliveryOptions = DEFAULT_SETTINGS.ticket_delivery_options as unknown as DeliveryOption[],
+    surchargeRate = 0.03,
+  } = params;
 
   let ticketsSubtotal = 0;
 
@@ -21,7 +32,7 @@ export function calculateTicketsTotal(params: {
     ticketsSubtotal += selection.adultQty * option.price_adult;
   }
 
-  const deliveryOption = DELIVERY_OPTIONS.find(
+  const deliveryOption = deliveryOptions.find(
     (d) => d.value === deliveryMethod
   );
   const shippingFee = deliveryOption?.fee ?? 0;
@@ -29,7 +40,7 @@ export function calculateTicketsTotal(params: {
 
   const subtotal = ticketsSubtotal + shippingFee;
   const beforeSurcharge = subtotal + donationCents;
-  const surcharge = addSurcharge ? Math.round(beforeSurcharge * 0.03) : 0;
+  const surcharge = addSurcharge ? Math.round(beforeSurcharge * surchargeRate) : 0;
   const total = beforeSurcharge + surcharge;
 
   return {

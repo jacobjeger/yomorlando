@@ -11,9 +11,14 @@ import { createPaymentIntent } from "@/app/actions/payments";
 import { Heart, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const PRESET_AMOUNTS = [18, 36, 54, 100];
+const DEFAULT_PRESET_AMOUNTS = [18, 36, 54, 100];
 
-export function DonationPageForm() {
+interface DonationPageFormProps {
+  presetAmounts?: number[];
+}
+
+export function DonationPageForm({ presetAmounts }: DonationPageFormProps) {
+  const amounts = presetAmounts ?? DEFAULT_PRESET_AMOUNTS;
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState("");
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -88,7 +93,7 @@ export function DonationPageForm() {
         <div>
           <Label className="mb-2 block">Select an amount</Label>
           <div className="grid grid-cols-2 gap-3">
-            {PRESET_AMOUNTS.map((amount) => (
+            {amounts.map((amount) => (
               <Button
                 key={amount}
                 type="button"

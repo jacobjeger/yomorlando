@@ -1,7 +1,11 @@
-const BASE_PRICE_PER_HOUSE = 47500; // $475
-const SOLARA_MEMBER_DISCOUNT = 7500; // $75
-const RING_SET_PRICE = 6000; // $60
-const COUNTER_ROLL_PRICE = 3500; // $35
+import type { KasheringPricing } from "@/lib/settings-defaults";
+
+const DEFAULTS: KasheringPricing = {
+  base_price: 47500,
+  solara_discount: 7500,
+  ring_set_price: 6000,
+  counter_roll_price: 3500,
+};
 
 export function calculateKasheringTotal(params: {
   numHouses: number;
@@ -11,6 +15,8 @@ export function calculateKasheringTotal(params: {
   counterRollQty: number;
   donationDollars: number;
   addSurcharge: boolean;
+  pricing?: KasheringPricing;
+  surchargeRate?: number;
 }) {
   const {
     numHouses,
@@ -20,22 +26,24 @@ export function calculateKasheringTotal(params: {
     counterRollQty,
     donationDollars,
     addSurcharge,
+    pricing = DEFAULTS,
+    surchargeRate = 0.03,
   } = params;
 
-  let kasheringBase = BASE_PRICE_PER_HOUSE * numHouses;
+  let kasheringBase = pricing.base_price * numHouses;
 
   // Solara + shul membership discount
   if (development === "Solara" && shulMembership) {
-    kasheringBase -= SOLARA_MEMBER_DISCOUNT * numHouses;
+    kasheringBase -= pricing.solara_discount * numHouses;
   }
 
-  const ringsTotal = RING_SET_PRICE * ringSetQty;
-  const rollsTotal = COUNTER_ROLL_PRICE * counterRollQty;
+  const ringsTotal = pricing.ring_set_price * ringSetQty;
+  const rollsTotal = pricing.counter_roll_price * counterRollQty;
   const donationCents = Math.round(donationDollars * 100);
 
   const subtotal = kasheringBase + ringsTotal + rollsTotal;
   const beforeSurcharge = subtotal + donationCents;
-  const surcharge = addSurcharge ? Math.round(beforeSurcharge * 0.03) : 0;
+  const surcharge = addSurcharge ? Math.round(beforeSurcharge * surchargeRate) : 0;
   const total = beforeSurcharge + surcharge;
 
   return {

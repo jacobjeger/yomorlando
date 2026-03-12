@@ -1,5 +1,6 @@
 import { getOpenEventForHoliday } from "@/lib/queries/events";
 import { getLettuceInventory, getBagsOrdered } from "@/lib/queries/lettuce";
+import { getAllSettings } from "@/lib/queries/settings";
 import { LettuceForm } from "@/components/forms/lettuce-form";
 import { LettuceWaitlistForm } from "@/components/forms/lettuce-waitlist-form";
 import type { Metadata } from "next";
@@ -12,7 +13,10 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default async function LettucePage() {
-  const event = await getOpenEventForHoliday("pesach");
+  const [event, settings] = await Promise.all([
+    getOpenEventForHoliday("pesach"),
+    getAllSettings(),
+  ]);
 
   if (!event) {
     return (
@@ -56,7 +60,12 @@ export default async function LettucePage() {
           </p>
         </div>
       ) : (
-        <LettuceForm eventId={event.id} />
+        <LettuceForm
+          eventId={event.id}
+          developments={settings.lettuce_developments}
+          lettucePricing={settings.lettuce_pricing}
+          surchargeRate={settings.surcharge_rate.rate}
+        />
       )}
     </div>
   );
