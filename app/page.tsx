@@ -12,6 +12,7 @@ import {
   Sun,
   Snowflake,
   ArrowRight,
+  CalendarDays,
 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
@@ -117,6 +118,75 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {/* Current Yom Tov - Featured */}
+      {upcomingEvents.length > 0 && (() => {
+        const featured = upcomingEvents[0];
+        const isOrderOpen =
+          new Date(featured.order_open) <= new Date() &&
+          new Date(featured.order_close) > new Date();
+        const seasonPath = featured.holiday_type === "pesach" ? "/pesach" : featured.holiday_type === "succos" ? "/succos" : "/winter-break";
+        const holidayLabel = featured.holiday_type === "pesach" ? "Pesach" : featured.holiday_type === "succos" ? "Succos" : "Winter Break";
+
+        return (
+          <section className="bg-gradient-to-b from-[hsl(38,75%,55%,0.08)] to-transparent border-b">
+            <div className="container py-10 md:py-14">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse" />
+                <span className="text-sm font-semibold uppercase tracking-wider text-[hsl(38,75%,55%)]">
+                  {isOrderOpen ? "Now Open" : "Coming Soon"} — {holidayLabel} {featured.year}
+                </span>
+              </div>
+              <div className="grid md:grid-cols-2 gap-8 items-center">
+                <div>
+                  <h2 className="text-3xl md:text-4xl font-bold mb-3">{featured.name}</h2>
+                  <p className="text-muted-foreground mb-1 flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4" />
+                    {format(new Date(featured.start_date), "MMMM d")} — {format(new Date(featured.end_date), "MMMM d, yyyy")}
+                  </p>
+                  {isOrderOpen && (
+                    <p className="text-sm text-muted-foreground mb-6">
+                      Orders close {format(new Date(featured.order_close), "MMMM d, yyyy")}
+                    </p>
+                  )}
+                  {!isOrderOpen && new Date(featured.order_open) > new Date() && (
+                    <p className="text-sm text-muted-foreground mb-6">
+                      Orders open {format(new Date(featured.order_open), "MMMM d, yyyy")}
+                    </p>
+                  )}
+                  <div className="flex flex-wrap gap-3">
+                    <Link
+                      href={`${seasonPath}/tickets`}
+                      className="inline-flex items-center gap-2 bg-[hsl(224,50%,28%)] text-white font-semibold px-6 py-3 rounded-lg hover:bg-[hsl(224,50%,35%)] transition-colors"
+                    >
+                      <Ticket className="h-4 w-4" /> Park Tickets
+                    </Link>
+                    {featured.holiday_type === "pesach" && (
+                      <>
+                        <Link
+                          href="/pesach/kashering"
+                          className="inline-flex items-center gap-2 bg-white border-2 border-[hsl(224,50%,28%)] text-[hsl(224,50%,28%)] font-semibold px-6 py-3 rounded-lg hover:bg-[hsl(224,50%,28%,0.05)] transition-colors"
+                        >
+                          <Utensils className="h-4 w-4" /> Villa Kashering
+                        </Link>
+                        <Link
+                          href="/pesach/lettuce"
+                          className="inline-flex items-center gap-2 bg-white border-2 border-[hsl(224,50%,28%)] text-[hsl(224,50%,28%)] font-semibold px-6 py-3 rounded-lg hover:bg-[hsl(224,50%,28%,0.05)] transition-colors"
+                        >
+                          <Leaf className="h-4 w-4" /> Checked Lettuce
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="flex justify-center">
+                  <EventCard event={featured} showCountdown />
+                </div>
+              </div>
+            </div>
+          </section>
+        );
+      })()}
+
       {/* Features */}
       <section className="container py-16 md:py-20">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -139,17 +209,17 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Upcoming Events */}
-      {upcomingEvents.length > 0 && (
+      {/* More Upcoming Events */}
+      {upcomingEvents.length > 1 && (
         <section className="container py-12 md:py-16">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-1 h-8 rounded-full bg-[hsl(38,75%,55%)]" />
             <h2 className="text-2xl md:text-3xl font-bold">
-              Upcoming Yamim Tovim
+              More Upcoming Yamim Tovim
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {upcomingEvents.map((event) => (
+            {upcomingEvents.slice(1).map((event) => (
               <EventCard key={event.id} event={event} showCountdown />
             ))}
           </div>

@@ -10,7 +10,12 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { AlertTriangle, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 import { AddressBlock } from "@/components/forms/address-block";
 import { SurchargeRadio } from "@/components/forms/surcharge-radio";
 import { DonationInput } from "@/components/forms/donation-input";
@@ -26,10 +31,11 @@ import { useToast } from "@/hooks/use-toast";
 
 interface KasheringFormProps {
   eventId: string;
-  accessDays: string[];
+  eventStartDate: string;
+  eventEndDate: string;
 }
 
-export function KasheringForm({ eventId, accessDays }: KasheringFormProps) {
+export function KasheringForm({ eventId, eventStartDate, eventEndDate }: KasheringFormProps) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
@@ -265,28 +271,48 @@ export function KasheringForm({ eventId, accessDays }: KasheringFormProps) {
         <FormField
           control={form.control}
           name="accessDay"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Access Day</FormLabel>
-              <FormControl>
-                <RadioGroup
-                  onValueChange={field.onChange}
-                  value={field.value}
-                  className="space-y-2"
-                >
-                  {accessDays.map((day) => (
-                    <div key={day} className="flex items-center space-x-2">
-                      <RadioGroupItem value={day} id={`day-${day}`} />
-                      <Label htmlFor={`day-${day}`} className="font-normal cursor-pointer">
-                        {day}
-                      </Label>
-                    </div>
-                  ))}
-                </RadioGroup>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            const selected = field.value ? new Date(field.value + "T00:00:00") : undefined;
+            return (
+              <FormItem>
+                <FormLabel>Access Day</FormLabel>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <FormControl>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !field.value && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {field.value
+                          ? format(selected!, "EEEE, MMMM d, yyyy")
+                          : "Select access day"}
+                      </Button>
+                    </FormControl>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={selected}
+                      onSelect={(date) => {
+                        field.onChange(date ? format(date, "yyyy-MM-dd") : "");
+                      }}
+                      disabled={(date) =>
+                        date < new Date(eventStartDate + "T00:00:00") ||
+                        date > new Date(eventEndDate + "T00:00:00")
+                      }
+                      defaultMonth={new Date(eventStartDate + "T00:00:00")}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
         <Separator />
