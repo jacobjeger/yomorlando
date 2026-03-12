@@ -21,7 +21,7 @@ const seasons = [
     title: "Pesach",
     href: "/pesach",
     icon: Sun,
-    description: "Park tickets, villa kashering, and checked lettuce for your Pesach vacation.",
+    description: "Park tickets, villa kashering, and checked lettuce for your Yom Tov in Orlando.",
     color: "from-amber-500/20 to-orange-500/10",
     iconColor: "text-amber-600",
     iconBg: "bg-amber-100",
@@ -30,7 +30,7 @@ const seasons = [
     title: "Succos",
     href: "/succos",
     icon: Leaf,
-    description: "Discounted theme park tickets for Chol HaMoed Succos.",
+    description: "Discounted theme park tickets for Chol HaMoed Succos outings.",
     color: "from-emerald-500/20 to-green-500/10",
     iconColor: "text-emerald-600",
     iconBg: "bg-emerald-100",
@@ -39,7 +39,7 @@ const seasons = [
     title: "Winter Break",
     href: "/winter-break",
     icon: Snowflake,
-    description: "Theme park tickets for your family winter vacation.",
+    description: "Theme park tickets for your family&apos;s winter getaway.",
     color: "from-blue-500/20 to-indigo-500/10",
     iconColor: "text-blue-600",
     iconBg: "bg-blue-100",
@@ -50,22 +50,22 @@ const features = [
   {
     icon: Ticket,
     title: "Discounted Tickets",
-    description: "Save on Universal, Disney, SeaWorld, and more.",
+    description: "Save on Universal, Disney, SeaWorld, and more for your Yom Tov trip.",
   },
   {
     icon: Utensils,
     title: "Villa Kashering",
-    description: "Professional kashering for your Orlando vacation home.",
+    description: "Have your Orlando villa kashered l'Pesach by our experienced team.",
   },
   {
     icon: Leaf,
     title: "Checked Lettuce",
-    description: "Pre-checked romaine lettuce delivered for your Seder.",
+    description: "Bodek-checked romaine lettuce for your Seder, delivered to your door.",
   },
   {
     icon: MapPin,
     title: "Local Pickup",
-    description: "Convenient pickup locations in Orlando resort communities.",
+    description: "Convenient pickup in Solara, ChampionsGate, and nearby communities.",
   },
 ];
 
@@ -91,26 +91,27 @@ export default async function HomePage() {
             priority
           />
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
-            Jewish Holiday Services{" "}
+            Yom Tov Services{" "}
             <span className="text-[hsl(38,75%,55%)]">in Orlando</span>
           </h1>
           <p className="text-lg md:text-xl text-white/60 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Your year-round destination for discounted park tickets, villa kashering,
-            checked lettuce, and more — brought to you by Yeshiva of Miami.
+            Your one-stop source for discounted park tickets, villa kashering,
+            checked lettuce, and more — serving the frum community in the
+            Orlando villa resort area.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/pesach"
               className="inline-flex items-center justify-center gap-2 bg-[hsl(38,75%,55%)] text-[hsl(224,50%,14%)] font-semibold px-8 py-3.5 rounded-lg hover:bg-[hsl(38,75%,60%)] transition-colors"
             >
-              View Pesach Services
+              Pesach Services
               <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="#seasons"
               className="inline-flex items-center justify-center gap-2 bg-white/10 border border-white/20 text-white font-medium px-8 py-3.5 rounded-lg hover:bg-white/15 transition-colors"
             >
-              Browse All Seasons
+              Browse All Yamim Tovim
             </Link>
           </div>
         </div>
@@ -144,7 +145,7 @@ export default async function HomePage() {
           <div className="flex items-center gap-3 mb-8">
             <div className="w-1 h-8 rounded-full bg-[hsl(38,75%,55%)]" />
             <h2 className="text-2xl md:text-3xl font-bold">
-              Current & Upcoming Events
+              Upcoming Yamim Tovim
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -160,10 +161,10 @@ export default async function HomePage() {
         <div className="container">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-bold mb-3">
-              Explore by Season
+              Explore by Yom Tov
             </h2>
             <p className="text-muted-foreground max-w-lg mx-auto">
-              We offer services throughout the year. Choose a season to see
+              We offer services for every Yom Tov season. Choose below to see
               what&apos;s available.
             </p>
           </div>
@@ -200,7 +201,7 @@ export default async function HomePage() {
           <div className="flex items-center gap-3 mb-8">
             <div className="w-1 h-8 rounded-full bg-muted-foreground/30" />
             <h2 className="text-xl font-semibold text-muted-foreground">
-              Past Events
+              Previous Yamim Tovim
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

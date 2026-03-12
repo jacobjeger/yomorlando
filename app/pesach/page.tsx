@@ -8,7 +8,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Pesach",
   description:
-    "Pesach services in Orlando — park tickets, villa kashering, and checked lettuce.",
+    "Pesach services in Orlando — park tickets, villa kashering, and bodek-checked lettuce for Yom Tov.",
 };
 
 export const dynamic = "force-dynamic";
@@ -43,7 +43,7 @@ export default async function PesachPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <ServiceCard
             title="Park Tickets"
-            description="Discounted tickets for Universal, SeaWorld, Disney, and more."
+            description="Discounted tickets for Universal, SeaWorld, Disney, and more for your Chol HaMoed outings."
             icon={Ticket}
             href="/pesach/tickets"
             disabled={!isOrderOpen}
@@ -51,7 +51,7 @@ export default async function PesachPage() {
           />
           <ServiceCard
             title="Villa Kashering"
-            description="Professional kashering service for your Orlando villa."
+            description="Have your Orlando villa kashered l'Pesach by our experienced team."
             icon={Utensils}
             href="/pesach/kashering"
             disabled={!isOrderOpen}
@@ -59,7 +59,7 @@ export default async function PesachPage() {
           />
           <ServiceCard
             title="Checked Lettuce"
-            description="Pre-checked romaine lettuce bags for your Seder."
+            description="Bodek-checked romaine lettuce bags for your Seder, available for pickup or delivery."
             icon={Leaf}
             href="/pesach/lettuce"
             disabled={!isOrderOpen}
@@ -68,7 +68,7 @@ export default async function PesachPage() {
         </div>
 
         <div className="mt-12 p-6 rounded-xl border bg-card">
-          <h3 className="text-base font-semibold mb-3">Important Notes</h3>
+          <h3 className="text-base font-semibold mb-3">Please Note</h3>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
               <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-muted-foreground/40 shrink-0" />
@@ -80,7 +80,7 @@ export default async function PesachPage() {
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-muted-foreground/40 shrink-0" />
-              Kashering services are available for villas in select Orlando resort communities
+              Kashering is available for villas in Solara, ChampionsGate, Windsor, and other Orlando resort communities
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-muted-foreground/40 shrink-0" />

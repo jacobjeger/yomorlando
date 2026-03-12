@@ -17,14 +17,14 @@ export function Footer() {
               />
             </div>
             <p className="text-sm leading-relaxed text-white/60">
-              Yeshiva of Miami — providing Jewish holiday services in the
-              Orlando, Florida villa resort area since 2019.
+              Yeshiva of Miami — serving the frum community with Yom Tov
+              services in the Orlando, Florida villa resort area.
             </p>
           </div>
 
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-wider text-white/40 mb-4">
-              Seasons
+              Yamim Tovim
             </h3>
             <ul className="space-y-2.5 text-sm">
               <li>

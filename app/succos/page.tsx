@@ -7,7 +7,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Succos",
-  description: "Succos services in Orlando — discounted park tickets.",
+  description: "Succos services in Orlando — discounted park tickets for Chol HaMoed.",
 };
 
 export const dynamic = "force-dynamic";
@@ -42,7 +42,7 @@ export default async function SuccosPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <ServiceCard
             title="Park Tickets"
-            description="Discounted tickets for Universal, SeaWorld, Disney, and more."
+            description="Discounted tickets for Universal, SeaWorld, Disney, and more for your Chol HaMoed outings."
             icon={Ticket}
             href="/succos/tickets"
             disabled={!isOrderOpen}
@@ -51,7 +51,7 @@ export default async function SuccosPage() {
         </div>
 
         <div className="mt-12 p-6 rounded-xl border bg-card">
-          <h3 className="text-base font-semibold mb-3">Important Notes</h3>
+          <h3 className="text-base font-semibold mb-3">Please Note</h3>
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li className="flex items-start gap-2">
               <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-muted-foreground/40 shrink-0" />

@@ -18,11 +18,11 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: {
-    default: "YoM Orlando — Yeshiva of Miami Holiday Services",
+    default: "YoM Orlando — Yom Tov Services by Yeshiva of Miami",
     template: "%s | YoM Orlando",
   },
   description:
-    "Year-round platform for Jewish holiday services in the Orlando, Florida villa resort area. Park tickets, villa kashering, and more for Pesach, Succos, and Winter Break.",
+    "Your source for Yom Tov services in the Orlando, Florida villa resort area. Discounted park tickets, villa kashering l'Pesach, checked lettuce, and more.",
 };
 
 export default function RootLayout({
