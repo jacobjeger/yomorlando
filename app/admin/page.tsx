@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { formatCents } from "@/lib/utils";
 import { format } from "date-fns";
-import { ShoppingCart, DollarSign, Ticket, Salad, ChefHat } from "lucide-react";
+import { ShoppingCart, DollarSign, Ticket, Salad, ChefHat, Clock } from "lucide-react";
 import type { Order } from "@/lib/database.types";
 
 export const dynamic = "force-dynamic";
@@ -25,6 +25,7 @@ export default async function AdminDashboardPage() {
     { count: totalOrders },
     { data: allOrders },
     { data: recentOrders },
+    { count: pendingCount },
   ] = await Promise.all([
     supabase.from("orders").select("*", { count: "exact", head: true }),
     supabase.from("orders").select("order_type, total"),
@@ -33,6 +34,10 @@ export default async function AdminDashboardPage() {
       .select("*")
       .order("created_at", { ascending: false })
       .limit(10),
+    supabase
+      .from("orders")
+      .select("*", { count: "exact", head: true })
+      .eq("fulfillment_status", "pending"),
   ]);
 
   const orders = (allOrders ?? []) as { order_type: string; total: number }[];
@@ -55,18 +60,34 @@ export default async function AdminDashboardPage() {
       <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Orders
-            </CardTitle>
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{totalOrders ?? 0}</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4 mb-8">
+        <Link href="/admin/orders">
+          <Card className="hover:border-primary/30 transition-colors h-full">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Orders
+              </CardTitle>
+              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{totalOrders ?? 0}</p>
+            </CardContent>
+          </Card>
+        </Link>
+
+        <Link href="/admin/orders?status=pending">
+          <Card className="hover:border-primary/30 transition-colors h-full">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Pending
+              </CardTitle>
+              <Clock className="h-4 w-4 text-yellow-500" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold text-yellow-600">{pendingCount ?? 0}</p>
+            </CardContent>
+          </Card>
+        </Link>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -80,41 +101,47 @@ export default async function AdminDashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Ticket Orders
-            </CardTitle>
-            <Ticket className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{ticketCount}</p>
-          </CardContent>
-        </Card>
+        <Link href="/admin/orders?type=tickets">
+          <Card className="hover:border-primary/30 transition-colors h-full">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Ticket Orders
+              </CardTitle>
+              <Ticket className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{ticketCount}</p>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Kashering Orders
-            </CardTitle>
-            <ChefHat className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{kasheringCount}</p>
-          </CardContent>
-        </Card>
+        <Link href="/admin/orders?type=kashering">
+          <Card className="hover:border-primary/30 transition-colors h-full">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Kashering Orders
+              </CardTitle>
+              <ChefHat className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{kasheringCount}</p>
+            </CardContent>
+          </Card>
+        </Link>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Lettuce Orders
-            </CardTitle>
-            <Salad className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold">{lettuceCount}</p>
-          </CardContent>
-        </Card>
+        <Link href="/admin/orders?type=lettuce">
+          <Card className="hover:border-primary/30 transition-colors h-full">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Lettuce Orders
+              </CardTitle>
+              <Salad className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{lettuceCount}</p>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Recent Orders */}

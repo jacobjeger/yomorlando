@@ -58,6 +58,14 @@ export function Footer() {
                   info@yomorlando.com
                 </a>
               </li>
+              <li>
+                <a
+                  href="tel:+13054000723"
+                  className="hover:text-[hsl(38,75%,55%)] transition-colors"
+                >
+                  (305) 400-0723
+                </a>
+              </li>
             </ul>
           </div>
         </div>

@@ -1,6 +1,13 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { getUpcomingEvents, getPastEvents } from "@/lib/queries/events";
+
+export const metadata: Metadata = {
+  title: "YoM Orlando — Yom Tov Services by Yeshiva of Miami",
+  description:
+    "Your source for Yom Tov services in the Orlando, Florida villa resort area. Discounted park tickets, villa kashering l'Pesach, checked lettuce, and more.",
+};
 import { EventCard } from "@/components/ui/event-card";
 import { Badge } from "@/components/ui/badge";
 import { format } from "date-fns";

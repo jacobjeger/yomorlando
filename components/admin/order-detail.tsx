@@ -15,7 +15,8 @@ import {
 } from "@/components/ui/select";
 import { formatCents } from "@/lib/utils";
 import { format } from "date-fns";
-import { updateOrderStatus, refundOrder, deleteOrder } from "@/app/actions/admin/orders";
+import { Mail } from "lucide-react";
+import { updateOrderStatus, refundOrder, deleteOrder, resendConfirmationEmail } from "@/app/actions/admin/orders";
 import { useToast } from "@/hooks/use-toast";
 import type { Order, OrderItem, KasheringDetails, FulfillmentStatus } from "@/lib/database.types";
 
@@ -29,6 +30,7 @@ export function OrderDetail({ order, items, kasheringDetails }: OrderDetailProps
   const router = useRouter();
   const { toast } = useToast();
   const [refunding, setRefunding] = useState(false);
+  const [resending, setResending] = useState(false);
 
   const handleStatusChange = async (status: string) => {
     await updateOrderStatus(order.id, status as FulfillmentStatus);
@@ -47,6 +49,18 @@ export function OrderDetail({ order, items, kasheringDetails }: OrderDetailProps
       toast({ title: "Refund failed", variant: "destructive" });
     } finally {
       setRefunding(false);
+    }
+  };
+
+  const handleResendEmail = async () => {
+    setResending(true);
+    try {
+      await resendConfirmationEmail(order.id);
+      toast({ title: "Confirmation email resent" });
+    } catch {
+      toast({ title: "Failed to resend email", variant: "destructive" });
+    } finally {
+      setResending(false);
     }
   };
 
@@ -85,6 +99,12 @@ export function OrderDetail({ order, items, kasheringDetails }: OrderDetailProps
               </p>
             )}
             <p><strong>Date:</strong> {format(new Date(order.created_at), "MMM d, yyyy h:mm a")}</p>
+            {(() => {
+              const deliveryItem = items.find((i) => i.delivery_method);
+              return deliveryItem?.delivery_method ? (
+                <p><strong>Delivery:</strong> {deliveryItem.delivery_method.replace("_", " ")}</p>
+              ) : null;
+            })()}
             {order.how_heard && <p><strong>How heard:</strong> {order.how_heard}</p>}
             {order.comments && <p><strong>Comments:</strong> {order.comments}</p>}
           </CardContent>
@@ -169,7 +189,15 @@ export function OrderDetail({ order, items, kasheringDetails }: OrderDetailProps
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                variant="outline"
+                onClick={handleResendEmail}
+                disabled={resending}
+              >
+                <Mail className="mr-2 h-4 w-4" />
+                {resending ? "Sending..." : "Resend Email"}
+              </Button>
               {order.stripe_payment_intent_id && (
                 <Button
                   variant="destructive"
