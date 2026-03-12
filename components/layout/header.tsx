@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -27,11 +28,15 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full bg-[hsl(224,50%,18%)] text-white">
       <div className="container flex h-16 items-center justify-between">
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[hsl(38,75%,55%)] flex items-center justify-center">
-            <span className="text-sm font-bold text-[hsl(224,50%,18%)]">Y</span>
-          </div>
-          <span className="text-lg font-semibold tracking-tight">YoM Orlando</span>
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/logo.png"
+            alt="YoM Orlando — Yeshiva of Miami"
+            width={120}
+            height={59}
+            className="h-10 w-auto brightness-0 invert"
+            priority
+          />
         </Link>
 
         {/* Desktop nav */}

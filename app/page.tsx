@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { getUpcomingEvents, getPastEvents } from "@/lib/queries/events";
 import { EventCard } from "@/components/ui/event-card";
 import { Badge } from "@/components/ui/badge";
@@ -81,10 +82,14 @@ export default async function HomePage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(38,75%,55%,0.15),transparent_60%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(224,50%,40%,0.2),transparent_60%)]" />
         <div className="container relative py-24 md:py-36 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 border border-white/10 text-sm text-white/80 mb-8">
-            <MapPin className="h-3.5 w-3.5 text-[hsl(38,75%,55%)]" />
-            Orlando, Florida
-          </div>
+          <Image
+            src="/logo-large.png"
+            alt="YoM — Yeshiva of Miami"
+            width={280}
+            height={138}
+            className="h-24 md:h-32 w-auto mx-auto mb-8 brightness-0 invert"
+            priority
+          />
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
             Jewish Holiday Services{" "}
             <span className="text-[hsl(38,75%,55%)]">in Orlando</span>

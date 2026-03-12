@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export function Footer() {
   return (
@@ -6,11 +7,14 @@ export function Footer() {
       <div className="container py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
           <div>
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-[hsl(38,75%,55%)] flex items-center justify-center">
-                <span className="text-sm font-bold text-[hsl(224,50%,18%)]">Y</span>
-              </div>
-              <span className="text-lg font-semibold text-white">YoM Orlando</span>
+            <div className="mb-4">
+              <Image
+                src="/logo.png"
+                alt="YoM Orlando — Yeshiva of Miami"
+                width={140}
+                height={69}
+                className="h-12 w-auto brightness-0 invert"
+              />
             </div>
             <p className="text-sm leading-relaxed text-white/60">
               Yeshiva of Miami — providing Jewish holiday services in the
