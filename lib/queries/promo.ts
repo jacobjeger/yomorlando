@@ -15,7 +15,8 @@ export async function getAllPromoCodes(): Promise<PromoCode[]> {
 export async function validatePromoCode(
   code: string,
   orderType: string,
-  subtotal: number
+  subtotal: number,
+  context?: { shippingFee?: number; itemCount?: number }
 ): Promise<{ valid: false; error: string } | { valid: true; promo: PromoCode; discountAmount: number }> {
   const supabase = createServiceClient();
   const { data, error } = await supabase
@@ -57,11 +58,39 @@ export async function validatePromoCode(
 
   // Calculate discount
   let discountAmount: number;
-  if (promo.discount_type === "percentage") {
-    discountAmount = Math.round(subtotal * (promo.discount_value / 100));
-  } else {
-    discountAmount = Math.min(promo.discount_value, subtotal);
+  switch (promo.discount_type) {
+    case "percentage":
+      discountAmount = Math.round(subtotal * (promo.discount_value / 100));
+      break;
+    case "fixed":
+      discountAmount = Math.min(promo.discount_value, subtotal);
+      break;
+    case "bogo":
+      // Buy one get one free — discount equals half the subtotal (every 2nd item free)
+      discountAmount = Math.round(subtotal / 2);
+      break;
+    case "free_shipping":
+      // Discount equals the shipping/delivery fee
+      discountAmount = context?.shippingFee ?? 0;
+      if (discountAmount === 0) {
+        return { valid: false, error: "No shipping fee to waive on this order" };
+      }
+      break;
+    case "flat_per_item":
+      // Fixed amount off per item (discount_value is cents per item)
+      discountAmount = Math.min((context?.itemCount ?? 1) * promo.discount_value, subtotal);
+      break;
+    default:
+      discountAmount = 0;
   }
+
+  // Apply max discount cap if set
+  if (promo.max_discount_amount !== null && discountAmount > promo.max_discount_amount) {
+    discountAmount = promo.max_discount_amount;
+  }
+
+  // Never discount more than the subtotal
+  discountAmount = Math.min(discountAmount, subtotal);
 
   return { valid: true, promo, discountAmount };
 }

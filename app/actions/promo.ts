@@ -3,8 +3,13 @@
 import { validatePromoCode } from "@/lib/queries/promo";
 import { createServiceClient } from "@/lib/supabase/server";
 
-export async function applyPromoCode(code: string, orderType: string, subtotal: number) {
-  const result = await validatePromoCode(code, orderType, subtotal);
+export async function applyPromoCode(
+  code: string,
+  orderType: string,
+  subtotal: number,
+  context?: { shippingFee?: number; itemCount?: number }
+) {
+  const result = await validatePromoCode(code, orderType, subtotal, context);
 
   if (!result.valid) {
     return { valid: false as const, error: result.error };

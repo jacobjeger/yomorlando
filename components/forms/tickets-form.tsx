@@ -406,6 +406,10 @@ export function TicketsForm({ event, howHeardOptions, deliveryOptions, surcharge
         <PromoCodeInput
           orderType="tickets"
           subtotal={pricing.subtotal}
+          shippingFee={pricing.shippingFee}
+          itemCount={Object.values(watched.ticketSelections || {}).reduce(
+            (sum, s) => sum + (s.childQty || 0) + (s.adultQty || 0), 0
+          )}
           onApply={setAppliedPromo}
         />
 

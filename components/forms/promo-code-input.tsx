@@ -10,10 +10,12 @@ import { applyPromoCode } from "@/app/actions/promo";
 interface PromoCodeInputProps {
   orderType: string;
   subtotal: number;
+  shippingFee?: number;
+  itemCount?: number;
   onApply: (promo: { promoId: string; code: string; discountAmount: number } | null) => void;
 }
 
-export function PromoCodeInput({ orderType, subtotal, onApply }: PromoCodeInputProps) {
+export function PromoCodeInput({ orderType, subtotal, shippingFee, itemCount, onApply }: PromoCodeInputProps) {
   const [code, setCode] = useState("");
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState("");
@@ -24,7 +26,7 @@ export function PromoCodeInput({ orderType, subtotal, onApply }: PromoCodeInputP
     setChecking(true);
     setError("");
     try {
-      const result = await applyPromoCode(code, orderType, subtotal);
+      const result = await applyPromoCode(code, orderType, subtotal, { shippingFee, itemCount });
       if (!result.valid) {
         setError(result.error);
       } else {

@@ -3,12 +3,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 
+import type { DiscountType } from "@/lib/database.types";
+
 interface CreatePromoData {
   code: string;
-  discount_type: "percentage" | "fixed";
+  discount_type: DiscountType;
   discount_value: number;
   min_order_amount: number;
   max_uses: number | null;
+  max_discount_amount?: number | null;
   applies_to: string;
   valid_from: string | null;
   valid_until: string | null;
@@ -26,6 +29,7 @@ export async function createPromoCode(data: CreatePromoData) {
     discount_value: data.discount_value,
     min_order_amount: data.min_order_amount,
     max_uses: data.max_uses,
+    max_discount_amount: data.max_discount_amount ?? null,
     applies_to: data.applies_to,
     valid_from: data.valid_from,
     valid_until: data.valid_until,

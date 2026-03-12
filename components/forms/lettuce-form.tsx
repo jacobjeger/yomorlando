@@ -288,6 +288,8 @@ export function LettuceForm({ eventId, developments, lettucePricing, surchargeRa
         <PromoCodeInput
           orderType="lettuce"
           subtotal={pricing.subtotal}
+          shippingFee={pricing.deliveryFee}
+          itemCount={watched.bags || 1}
           onApply={setAppliedPromo}
         />
 

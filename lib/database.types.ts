@@ -141,7 +141,7 @@ export interface FaqItem {
   updated_at: string;
 }
 
-export type DiscountType = "percentage" | "fixed";
+export type DiscountType = "percentage" | "fixed" | "bogo" | "free_shipping" | "flat_per_item";
 export type PromoAppliesTo = "all" | "tickets" | "kashering" | "lettuce";
 
 export interface PromoCode {
@@ -156,6 +156,7 @@ export interface PromoCode {
   valid_from: string | null;
   valid_until: string | null;
   is_active: boolean;
+  max_discount_amount: number | null;
   created_at: string;
 }
 

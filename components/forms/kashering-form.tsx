@@ -452,6 +452,7 @@ export function KasheringForm({ eventId, eventStartDate, eventEndDate, developme
         <PromoCodeInput
           orderType="kashering"
           subtotal={pricing.subtotal}
+          itemCount={(watched.numHouses || 0) + (watched.ringSetQty || 0) + (watched.counterRollQty || 0)}
           onApply={setAppliedPromo}
         />
 

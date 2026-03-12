@@ -31,7 +31,7 @@ import {
 } from "@/components/ui/table";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import { createPromoCode, updatePromoCode, deletePromoCode } from "@/app/actions/admin/promo";
-import type { PromoCode } from "@/lib/database.types";
+import type { PromoCode, DiscountType } from "@/lib/database.types";
 import { format } from "date-fns";
 
 interface PromoCodesPanelProps {
@@ -40,14 +40,36 @@ interface PromoCodesPanelProps {
 
 const EMPTY_FORM = {
   code: "",
-  discount_type: "percentage" as "percentage" | "fixed",
+  discount_type: "percentage" as DiscountType,
   discount_value: "",
   min_order_amount: "",
   max_uses: "",
+  max_discount_amount: "",
   applies_to: "all",
   valid_from: "",
   valid_until: "",
   is_active: true,
+};
+
+const needsValueInput = (type: DiscountType) =>
+  type !== "bogo" && type !== "free_shipping";
+
+const discountValueLabel = (type: DiscountType) => {
+  switch (type) {
+    case "percentage": return "Discount (%)";
+    case "fixed": return "Discount ($)";
+    case "flat_per_item": return "Discount Per Item ($)";
+    default: return "Discount Value";
+  }
+};
+
+const discountValuePlaceholder = (type: DiscountType) => {
+  switch (type) {
+    case "percentage": return "e.g. 10";
+    case "fixed": return "e.g. 25.00";
+    case "flat_per_item": return "e.g. 5.00";
+    default: return "";
+  }
 };
 
 export function PromoCodesPanel({ initialCodes }: PromoCodesPanelProps) {
@@ -64,19 +86,25 @@ export function PromoCodesPanel({ initialCodes }: PromoCodesPanelProps) {
     setError("");
   };
 
+  const resolveDiscountValue = () => {
+    if (!needsValueInput(form.discount_type)) return 0;
+    if (form.discount_type === "percentage") return Number(form.discount_value);
+    return Math.round(Number(form.discount_value) * 100); // dollars → cents
+  };
+
   const handleCreate = async () => {
-    if (!form.code.trim() || !form.discount_value) return;
+    if (!form.code.trim() || (needsValueInput(form.discount_type) && !form.discount_value)) return;
     setSaving(true);
     setError("");
     try {
+      const discountValue = resolveDiscountValue();
       await createPromoCode({
         code: form.code,
         discount_type: form.discount_type,
-        discount_value: form.discount_type === "percentage"
-          ? Number(form.discount_value)
-          : Math.round(Number(form.discount_value) * 100),
+        discount_value: discountValue,
         min_order_amount: form.min_order_amount ? Math.round(Number(form.min_order_amount) * 100) : 0,
         max_uses: form.max_uses ? Number(form.max_uses) : null,
+        max_discount_amount: form.max_discount_amount ? Math.round(Number(form.max_discount_amount) * 100) : null,
         applies_to: form.applies_to,
         valid_from: form.valid_from || null,
         valid_until: form.valid_until || null,
@@ -87,11 +115,10 @@ export function PromoCodesPanel({ initialCodes }: PromoCodesPanelProps) {
         id: crypto.randomUUID(),
         code: form.code.toUpperCase().trim(),
         discount_type: form.discount_type,
-        discount_value: form.discount_type === "percentage"
-          ? Number(form.discount_value)
-          : Math.round(Number(form.discount_value) * 100),
+        discount_value: discountValue,
         min_order_amount: form.min_order_amount ? Math.round(Number(form.min_order_amount) * 100) : 0,
         max_uses: form.max_uses ? Number(form.max_uses) : null,
+        max_discount_amount: form.max_discount_amount ? Math.round(Number(form.max_discount_amount) * 100) : null,
         current_uses: 0,
         applies_to: form.applies_to as PromoCode["applies_to"],
         valid_from: form.valid_from || null,
@@ -109,18 +136,18 @@ export function PromoCodesPanel({ initialCodes }: PromoCodesPanelProps) {
   };
 
   const handleEdit = async () => {
-    if (!editingId || !form.code.trim() || !form.discount_value) return;
+    if (!editingId || !form.code.trim() || (needsValueInput(form.discount_type) && !form.discount_value)) return;
     setSaving(true);
     setError("");
     try {
+      const discountValue = resolveDiscountValue();
       await updatePromoCode(editingId, {
         code: form.code,
         discount_type: form.discount_type,
-        discount_value: form.discount_type === "percentage"
-          ? Number(form.discount_value)
-          : Math.round(Number(form.discount_value) * 100),
+        discount_value: discountValue,
         min_order_amount: form.min_order_amount ? Math.round(Number(form.min_order_amount) * 100) : 0,
         max_uses: form.max_uses ? Number(form.max_uses) : null,
+        max_discount_amount: form.max_discount_amount ? Math.round(Number(form.max_discount_amount) * 100) : null,
         applies_to: form.applies_to,
         valid_from: form.valid_from || null,
         valid_until: form.valid_until || null,
@@ -130,11 +157,10 @@ export function PromoCodesPanel({ initialCodes }: PromoCodesPanelProps) {
         ...c,
         code: form.code.toUpperCase().trim(),
         discount_type: form.discount_type,
-        discount_value: form.discount_type === "percentage"
-          ? Number(form.discount_value)
-          : Math.round(Number(form.discount_value) * 100),
+        discount_value: discountValue,
         min_order_amount: form.min_order_amount ? Math.round(Number(form.min_order_amount) * 100) : 0,
         max_uses: form.max_uses ? Number(form.max_uses) : null,
+        max_discount_amount: form.max_discount_amount ? Math.round(Number(form.max_discount_amount) * 100) : null,
         applies_to: form.applies_to as PromoCode["applies_to"],
         valid_from: form.valid_from || null,
         valid_until: form.valid_until || null,
@@ -173,12 +199,15 @@ export function PromoCodesPanel({ initialCodes }: PromoCodesPanelProps) {
     setEditingId(code.id);
     setForm({
       code: code.code,
-      discount_type: code.discount_type as "percentage" | "fixed",
-      discount_value: code.discount_type === "percentage"
-        ? String(code.discount_value)
-        : String(code.discount_value / 100),
+      discount_type: code.discount_type,
+      discount_value: !needsValueInput(code.discount_type)
+        ? ""
+        : code.discount_type === "percentage"
+          ? String(code.discount_value)
+          : String(code.discount_value / 100),
       min_order_amount: code.min_order_amount ? String(code.min_order_amount / 100) : "",
       max_uses: code.max_uses !== null ? String(code.max_uses) : "",
+      max_discount_amount: code.max_discount_amount ? String(code.max_discount_amount / 100) : "",
       applies_to: code.applies_to,
       valid_from: code.valid_from ? code.valid_from.slice(0, 16) : "",
       valid_until: code.valid_until ? code.valid_until.slice(0, 16) : "",
@@ -189,8 +218,14 @@ export function PromoCodesPanel({ initialCodes }: PromoCodesPanelProps) {
   };
 
   const formatDiscount = (code: PromoCode) => {
-    if (code.discount_type === "percentage") return `${code.discount_value}%`;
-    return `$${(code.discount_value / 100).toFixed(2)}`;
+    switch (code.discount_type) {
+      case "percentage": return `${code.discount_value}%`;
+      case "fixed": return `$${(code.discount_value / 100).toFixed(2)}`;
+      case "bogo": return "BOGO";
+      case "free_shipping": return "Free Shipping";
+      case "flat_per_item": return `$${(code.discount_value / 100).toFixed(2)}/item`;
+      default: return `${code.discount_value}`;
+    }
   };
 
   const formFields = (
@@ -221,26 +256,56 @@ export function PromoCodesPanel({ initialCodes }: PromoCodesPanelProps) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label>Discount Type</Label>
-          <Select value={form.discount_type} onValueChange={(v) => setForm({ ...form, discount_type: v as "percentage" | "fixed" })}>
+          <Select value={form.discount_type} onValueChange={(v) => setForm({ ...form, discount_type: v as DiscountType, discount_value: needsValueInput(v as DiscountType) ? form.discount_value : "" })}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="percentage">Percentage</SelectItem>
-              <SelectItem value="fixed">Fixed Amount</SelectItem>
+              <SelectItem value="percentage">Percentage Off</SelectItem>
+              <SelectItem value="fixed">Fixed Amount Off</SelectItem>
+              <SelectItem value="bogo">Buy One Get One Free</SelectItem>
+              <SelectItem value="free_shipping">Free Shipping</SelectItem>
+              <SelectItem value="flat_per_item">$ Off Per Item</SelectItem>
             </SelectContent>
           </Select>
         </div>
+        {needsValueInput(form.discount_type) ? (
+          <div>
+            <Label>{discountValueLabel(form.discount_type)}</Label>
+            <Input
+              type="number"
+              value={form.discount_value}
+              onChange={(e) => setForm({ ...form, discount_value: e.target.value })}
+              placeholder={discountValuePlaceholder(form.discount_type)}
+              min="0"
+              step={form.discount_type === "percentage" ? "1" : "0.01"}
+            />
+          </div>
+        ) : (
+          <div>
+            <Label>Max Discount ($, optional)</Label>
+            <Input
+              type="number"
+              value={form.max_discount_amount}
+              onChange={(e) => setForm({ ...form, max_discount_amount: e.target.value })}
+              placeholder="No limit"
+              min="0"
+              step="0.01"
+            />
+          </div>
+        )}
+      </div>
+      {needsValueInput(form.discount_type) && (form.discount_type === "percentage" || form.discount_type === "flat_per_item") && (
         <div>
-          <Label>{form.discount_type === "percentage" ? "Discount (%)" : "Discount ($)"}</Label>
+          <Label>Max Discount ($, optional)</Label>
           <Input
             type="number"
-            value={form.discount_value}
-            onChange={(e) => setForm({ ...form, discount_value: e.target.value })}
-            placeholder={form.discount_type === "percentage" ? "e.g. 10" : "e.g. 25.00"}
+            value={form.max_discount_amount}
+            onChange={(e) => setForm({ ...form, max_discount_amount: e.target.value })}
+            placeholder="No limit"
             min="0"
-            step={form.discount_type === "percentage" ? "1" : "0.01"}
+            step="0.01"
           />
         </div>
-      </div>
+      )}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label>Min Order ($, optional)</Label>
@@ -308,7 +373,7 @@ export function PromoCodesPanel({ initialCodes }: PromoCodesPanelProps) {
               <DialogTitle>Create Promo Code</DialogTitle>
             </DialogHeader>
             {formFields}
-            <Button onClick={handleCreate} disabled={saving || !form.code.trim() || !form.discount_value} className="w-full">
+            <Button onClick={handleCreate} disabled={saving || !form.code.trim() || (needsValueInput(form.discount_type) && !form.discount_value)} className="w-full">
               {saving ? "Creating..." : "Create Promo Code"}
             </Button>
           </DialogContent>
@@ -389,7 +454,7 @@ export function PromoCodesPanel({ initialCodes }: PromoCodesPanelProps) {
             <DialogTitle>Edit Promo Code</DialogTitle>
           </DialogHeader>
           {formFields}
-          <Button onClick={handleEdit} disabled={saving || !form.code.trim() || !form.discount_value} className="w-full">
+          <Button onClick={handleEdit} disabled={saving || !form.code.trim() || (needsValueInput(form.discount_type) && !form.discount_value)} className="w-full">
             {saving ? "Saving..." : "Save Changes"}
           </Button>
         </DialogContent>
