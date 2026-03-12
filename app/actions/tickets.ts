@@ -1,7 +1,7 @@
 "use server";
 
 import { createServiceClient } from "@/lib/supabase/server";
-import { sendTicketsConfirmation } from "@/app/actions/emails";
+import { sendTicketsConfirmation, sendAdminOrderNotification } from "@/app/actions/emails";
 import type { TicketsFormValues } from "@/lib/validations/tickets";
 import type { TicketOption } from "@/lib/database.types";
 
@@ -165,6 +165,19 @@ export async function submitTicketOrder(data: TicketOrderData) {
     });
   } catch (emailError) {
     console.error("Failed to send confirmation email:", emailError);
+  }
+
+  // Send admin notification
+  try {
+    await sendAdminOrderNotification({
+      customerName,
+      customerEmail: data.email,
+      orderId: order.id,
+      orderType: "tickets",
+      total: data.pricing.total,
+    });
+  } catch (notifyError) {
+    console.error("Failed to send admin notification:", notifyError);
   }
 
   return { orderId: order.id };

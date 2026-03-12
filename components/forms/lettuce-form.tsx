@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
@@ -39,6 +40,7 @@ interface LettuceFormProps {
 
 export function LettuceForm({ eventId, developments, lettucePricing, surchargeRate }: LettuceFormProps) {
   const devOptions = developments ?? [...DELIVERY_DEVELOPMENTS];
+  const router = useRouter();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
@@ -108,21 +110,18 @@ export function LettuceForm({ eventId, developments, lettucePricing, surchargeRa
   const handlePaymentSuccess = async (paymentIntentId: string) => {
     try {
       const values = form.getValues() as LettuceFormValues;
-      await submitLettuceOrder({
+      const result = await submitLettuceOrder({
         eventId,
         paymentIntentId,
         ...values,
         pricing,
       });
+      router.push(`/order-confirmation?orderId=${result.orderId}`);
+    } catch {
       setOrderComplete(true);
       toast({
-        title: "Order placed successfully!",
-        description: "Check your email for confirmation.",
-      });
-    } catch {
-      toast({
         title: "Error saving order",
-        description: "Your payment was processed. Please contact us.",
+        description: "Your payment was processed. Please contact us at info@yomorlando.com.",
         variant: "destructive",
       });
     }

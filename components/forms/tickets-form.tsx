@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
@@ -59,6 +60,7 @@ const PARK_LABELS: Record<string, string> = {
 export function TicketsForm({ event, howHeardOptions, deliveryOptions, surchargeRate }: TicketsFormProps) {
   const howHeardOpts = howHeardOptions ?? [...HOW_HEARD_OPTIONS];
   const deliveryOpts: DeliveryOption[] = deliveryOptions ?? (DELIVERY_OPTIONS as unknown as DeliveryOption[]);
+  const router = useRouter();
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
@@ -169,22 +171,19 @@ export function TicketsForm({ event, howHeardOptions, deliveryOptions, surcharge
   const handlePaymentSuccess = async (paymentIntentId: string) => {
     try {
       const values = form.getValues() as TicketsFormValues;
-      await submitTicketOrder({
+      const result = await submitTicketOrder({
         eventId: event.id,
         paymentIntentId,
         ...values,
         pricing,
         optionsMap,
       });
+      router.push(`/order-confirmation?orderId=${result.orderId}`);
+    } catch {
       setOrderComplete(true);
       toast({
-        title: "Order placed successfully!",
-        description: "Check your email for confirmation.",
-      });
-    } catch {
-      toast({
         title: "Error saving order",
-        description: "Your payment was processed. Please contact us.",
+        description: "Your payment was processed. Please contact us at info@yomorlando.com.",
         variant: "destructive",
       });
     }

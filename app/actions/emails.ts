@@ -1,12 +1,66 @@
 "use server";
 
 import { resend } from "@/lib/email";
+import AdminOrderNotification from "@/emails/admin-order-notification";
 import KasheringConfirmation from "@/emails/kashering-confirmation";
 import LettuceConfirmation from "@/emails/lettuce-confirmation";
+import OrderStatusUpdate from "@/emails/order-status-update";
 import TicketsConfirmation from "@/emails/tickets-confirmation";
 import type { Address } from "@/lib/database.types";
 
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "info@yomorlando.com";
+
 const FROM_EMAIL = "YoM Orlando <noreply@yomorlando.com>";
+
+export async function sendAdminOrderNotification(data: {
+  customerName: string;
+  customerEmail: string;
+  orderId: string;
+  orderType: string;
+  total: number;
+}) {
+  return resend.emails.send({
+    from: FROM_EMAIL,
+    to: ADMIN_EMAIL,
+    subject: `New ${data.orderType} order from ${data.customerName}`,
+    react: AdminOrderNotification({
+      customerName: data.customerName,
+      customerEmail: data.customerEmail,
+      orderId: data.orderId,
+      orderType: data.orderType,
+      total: data.total,
+    }),
+  });
+}
+
+export async function sendOrderStatusUpdate(data: {
+  to: string;
+  customerName: string;
+  orderId: string;
+  orderType: string;
+  newStatus: string;
+  total: number;
+}) {
+  const statusLabels: Record<string, string> = {
+    pending: "Pending",
+    fulfilled: "Fulfilled",
+    shipped: "Shipped",
+    picked_up: "Picked Up",
+  };
+
+  return resend.emails.send({
+    from: FROM_EMAIL,
+    to: data.to,
+    subject: `YoM Orlando — Your order has been ${statusLabels[data.newStatus] || data.newStatus}`,
+    react: OrderStatusUpdate({
+      customerName: data.customerName,
+      orderId: data.orderId,
+      orderType: data.orderType,
+      newStatus: data.newStatus,
+      total: data.total,
+    }),
+  });
+}
 
 export async function sendKasheringConfirmation(data: {
   to: string;

@@ -5,7 +5,7 @@ export function Footer() {
   return (
     <footer className="bg-[hsl(224,50%,14%)] text-white/80">
       <div className="container py-12 md:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
           <div>
             <div className="mb-4">
               <Image
@@ -45,6 +45,34 @@ export function Footer() {
               <li>
                 <Link href="/faq" className="text-white/60 hover:text-[hsl(38,75%,55%)] transition-colors">
                   FAQ
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wider text-white/40 mb-4">
+              Quick Links
+            </h3>
+            <ul className="space-y-2.5 text-sm">
+              <li>
+                <Link href="/contact" className="text-white/60 hover:text-[hsl(38,75%,55%)] transition-colors">
+                  Contact Us
+                </Link>
+              </li>
+              <li>
+                <Link href="/order-lookup" className="text-white/60 hover:text-[hsl(38,75%,55%)] transition-colors">
+                  Order Lookup
+                </Link>
+              </li>
+              <li>
+                <Link href="/terms" className="text-white/60 hover:text-[hsl(38,75%,55%)] transition-colors">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="text-white/60 hover:text-[hsl(38,75%,55%)] transition-colors">
+                  Privacy Policy
                 </Link>
               </li>
             </ul>
