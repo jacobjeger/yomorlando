@@ -148,7 +148,7 @@ export function KasheringForm({ eventId, eventStartDate, eventEndDate }: Kasheri
     <Form {...form}>
       <form className="space-y-6">
         {/* Name */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField
             control={form.control}
             name="firstName"
@@ -224,7 +224,7 @@ export function KasheringForm({ eventId, eventStartDate, eventEndDate }: Kasheri
                 <RadioGroup
                   onValueChange={field.onChange}
                   value={field.value}
-                  className="grid grid-cols-2 gap-2"
+                  className="grid grid-cols-1 sm:grid-cols-2 gap-2"
                 >
                   {DEVELOPMENTS.map((dev) => (
                     <div key={dev} className="flex items-center space-x-2">

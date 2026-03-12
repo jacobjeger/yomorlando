@@ -82,7 +82,7 @@ export default async function HomePage() {
       <section className="relative overflow-hidden bg-[hsl(224,50%,18%)] text-white">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(38,75%,55%,0.15),transparent_60%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(224,50%,40%,0.2),transparent_60%)]" />
-        <div className="container relative py-24 md:py-36 text-center">
+        <div className="container relative py-16 md:py-36 text-center">
           <Image
             src="/logo-large.png"
             alt="YoM — Yeshiva of Miami"
@@ -153,7 +153,7 @@ export default async function HomePage() {
                       Orders open {format(new Date(featured.order_open), "MMMM d, yyyy")}
                     </p>
                   )}
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-col sm:flex-row flex-wrap gap-3">
                     <Link
                       href={`${seasonPath}/tickets`}
                       className="inline-flex items-center gap-2 bg-[hsl(224,50%,28%)] text-white font-semibold px-6 py-3 rounded-lg hover:bg-[hsl(224,50%,35%)] transition-colors"

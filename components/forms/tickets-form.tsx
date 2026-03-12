@@ -195,7 +195,7 @@ export function TicketsForm({ event }: TicketsFormProps) {
     <Form {...form}>
       <form className="space-y-6">
         {/* Personal Info */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <FormField control={form.control} name="firstName" render={({ field }) => (
             <FormItem><FormLabel>First Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
           )} />

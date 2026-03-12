@@ -33,11 +33,11 @@ export function QuantityStepper({
           type="button"
           variant="outline"
           size="icon"
-          className="h-8 w-8 rounded-r-none"
+          className="h-9 w-9 sm:h-8 sm:w-8 rounded-r-none"
           onClick={() => onChange(Math.max(min, value - 1))}
           disabled={disabled || value <= min}
         >
-          <Minus className="h-3 w-3" />
+          <Minus className="h-3.5 w-3.5 sm:h-3 sm:w-3" />
         </Button>
         <Input
           type="number"
@@ -46,18 +46,18 @@ export function QuantityStepper({
             const num = parseInt(e.target.value) || 0;
             onChange(Math.min(max, Math.max(min, num)));
           }}
-          className="h-8 w-14 rounded-none border-x-0 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          className="h-9 sm:h-8 w-14 rounded-none border-x-0 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
           disabled={disabled}
         />
         <Button
           type="button"
           variant="outline"
           size="icon"
-          className="h-8 w-8 rounded-l-none"
+          className="h-9 w-9 sm:h-8 sm:w-8 rounded-l-none"
           onClick={() => onChange(Math.min(max, value + 1))}
           disabled={disabled || value >= max}
         >
-          <Plus className="h-3 w-3" />
+          <Plus className="h-3.5 w-3.5 sm:h-3 sm:w-3" />
         </Button>
       </div>
     </div>
