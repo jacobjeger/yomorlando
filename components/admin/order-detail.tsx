@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -15,10 +16,11 @@ import {
 } from "@/components/ui/select";
 import { formatCents } from "@/lib/utils";
 import { format } from "date-fns";
-import { Mail } from "lucide-react";
+import { Mail, Trash2, Loader2 } from "lucide-react";
 import { updateOrderStatus, refundOrder, deleteOrder, resendConfirmationEmail } from "@/app/actions/admin/orders";
+import { getOrderNotes, addOrderNote, deleteOrderNote } from "@/app/actions/admin/order-notes";
 import { useToast } from "@/hooks/use-toast";
-import type { Order, OrderItem, KasheringDetails, FulfillmentStatus } from "@/lib/database.types";
+import type { Order, OrderItem, KasheringDetails, OrderNote, FulfillmentStatus } from "@/lib/database.types";
 
 interface OrderDetailProps {
   order: Order;
@@ -31,6 +33,41 @@ export function OrderDetail({ order, items, kasheringDetails }: OrderDetailProps
   const { toast } = useToast();
   const [refunding, setRefunding] = useState(false);
   const [resending, setResending] = useState(false);
+  const [notes, setNotes] = useState<OrderNote[]>([]);
+  const [newNote, setNewNote] = useState("");
+  const [addingNote, setAddingNote] = useState(false);
+
+  const loadNotes = useCallback(async () => {
+    const data = await getOrderNotes(order.id);
+    setNotes(data);
+  }, [order.id]);
+
+  useEffect(() => {
+    loadNotes();
+  }, [loadNotes]);
+
+  const handleAddNote = async () => {
+    if (!newNote.trim()) return;
+    setAddingNote(true);
+    try {
+      await addOrderNote(order.id, newNote);
+      setNewNote("");
+      await loadNotes();
+    } catch {
+      toast({ title: "Failed to add note", variant: "destructive" });
+    } finally {
+      setAddingNote(false);
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    try {
+      await deleteOrderNote(noteId, order.id);
+      await loadNotes();
+    } catch {
+      toast({ title: "Failed to delete note", variant: "destructive" });
+    }
+  };
 
   const handleStatusChange = async (status: string) => {
     await updateOrderStatus(order.id, status as FulfillmentStatus);
@@ -215,6 +252,53 @@ export function OrderDetail({ order, items, kasheringDetails }: OrderDetailProps
                 Delete Order
               </Button>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Notes */}
+        <Card>
+          <CardHeader><CardTitle>Notes</CardTitle></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex gap-2">
+              <Textarea
+                placeholder="Add a note..."
+                value={newNote}
+                onChange={(e) => setNewNote(e.target.value)}
+                rows={2}
+                className="flex-1"
+              />
+              <Button
+                onClick={handleAddNote}
+                disabled={addingNote || !newNote.trim()}
+                className="self-end"
+              >
+                {addingNote ? <Loader2 className="h-4 w-4 animate-spin" /> : "Add"}
+              </Button>
+            </div>
+            {notes.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No notes yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {notes.map((note) => (
+                  <div key={note.id} className="flex items-start justify-between gap-2 rounded-md border p-3">
+                    <div className="flex-1">
+                      <p className="text-sm whitespace-pre-wrap">{note.note}</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {format(new Date(note.created_at), "MMM d, yyyy h:mm a")}
+                      </p>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-muted-foreground hover:text-destructive"
+                      onClick={() => handleDeleteNote(note.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

@@ -20,6 +20,7 @@ const navLinks = [
   { href: "/succos", label: "Succos" },
   { href: "/winter-break", label: "Winter Break" },
   { href: "/faq", label: "FAQ" },
+  { href: "/contact", label: "Contact" },
 ];
 
 export function Header() {

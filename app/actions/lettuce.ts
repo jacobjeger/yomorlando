@@ -1,7 +1,7 @@
 "use server";
 
 import { createServiceClient } from "@/lib/supabase/server";
-import { sendLettuceConfirmation } from "@/app/actions/emails";
+import { sendLettuceConfirmation, sendAdminOrderNotification } from "@/app/actions/emails";
 import { getSetting } from "@/lib/queries/settings";
 import type { LettuceFormValues, WaitlistFormValues } from "@/lib/validations/lettuce";
 
@@ -98,6 +98,19 @@ export async function submitLettuceOrder(data: LettuceOrderData) {
     });
   } catch (emailError) {
     console.error("Failed to send confirmation email:", emailError);
+  }
+
+  // Send admin notification
+  try {
+    await sendAdminOrderNotification({
+      customerName,
+      customerEmail: data.email,
+      orderId: order.id,
+      orderType: "lettuce",
+      total: data.pricing.total,
+    });
+  } catch (notifyError) {
+    console.error("Failed to send admin notification:", notifyError);
   }
 
   return { orderId: order.id };

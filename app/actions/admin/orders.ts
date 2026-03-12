@@ -6,18 +6,44 @@ import {
   sendKasheringConfirmation,
   sendLettuceConfirmation,
   sendTicketsConfirmation,
+  sendOrderStatusUpdate,
 } from "@/app/actions/emails";
 import { revalidatePath } from "next/cache";
 import type { FulfillmentStatus, Order, OrderItem, KasheringDetails, Address } from "@/lib/database.types";
 
 export async function updateOrderStatus(orderId: string, status: FulfillmentStatus) {
   const supabase = createServiceClient();
+
+  // Fetch order before updating so we have customer info for the email
+  const { data: order } = await supabase
+    .from("orders")
+    .select("customer_email, customer_name, order_type, total")
+    .eq("id", orderId)
+    .single();
+
   const { error } = await supabase
     .from("orders")
     .update({ fulfillment_status: status })
     .eq("id", orderId);
 
   if (error) throw new Error("Failed to update order status");
+
+  // Send status update email to customer
+  if (order) {
+    try {
+      await sendOrderStatusUpdate({
+        to: order.customer_email,
+        customerName: order.customer_name,
+        orderId,
+        orderType: order.order_type,
+        newStatus: status,
+        total: order.total,
+      });
+    } catch (emailError) {
+      console.error("Failed to send status update email:", emailError);
+    }
+  }
+
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
 }

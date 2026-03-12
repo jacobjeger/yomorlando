@@ -159,6 +159,13 @@ export interface PromoCode {
   created_at: string;
 }
 
+export interface OrderNote {
+  id: string;
+  order_id: string;
+  note: string;
+  created_at: string;
+}
+
 // Extended types with relations
 export interface ParkWithOptions extends Park {
   ticket_options: TicketOption[];
@@ -243,6 +250,11 @@ export interface Database {
         Row: PromoCode;
         Insert: Omit<PromoCode, "id" | "created_at" | "current_uses">;
         Update: Partial<Omit<PromoCode, "id" | "created_at">>;
+      };
+      order_notes: {
+        Row: OrderNote;
+        Insert: Omit<OrderNote, "id" | "created_at">;
+        Update: Partial<Omit<OrderNote, "id" | "created_at">>;
       };
     };
     Enums: {

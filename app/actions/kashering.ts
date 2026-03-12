@@ -1,7 +1,7 @@
 "use server";
 
 import { createServiceClient } from "@/lib/supabase/server";
-import { sendKasheringConfirmation } from "@/app/actions/emails";
+import { sendKasheringConfirmation, sendAdminOrderNotification } from "@/app/actions/emails";
 import { getSetting } from "@/lib/queries/settings";
 import type { KasheringFormValues } from "@/lib/validations/kashering";
 
@@ -132,6 +132,19 @@ export async function submitKasheringOrder(data: KasheringOrderData) {
     });
   } catch (emailError) {
     console.error("Failed to send confirmation email:", emailError);
+  }
+
+  // Send admin notification
+  try {
+    await sendAdminOrderNotification({
+      customerName,
+      customerEmail: data.email,
+      orderId: order.id,
+      orderType: "kashering",
+      total: data.pricing.total,
+    });
+  } catch (notifyError) {
+    console.error("Failed to send admin notification:", notifyError);
   }
 
   return { orderId: order.id };
