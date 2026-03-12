@@ -40,6 +40,7 @@ import { submitTicketOrder } from "@/app/actions/tickets";
 import { useToast } from "@/hooks/use-toast";
 import type { EventWithParks, TicketOption } from "@/lib/database.types";
 import type { DeliveryOption } from "@/lib/settings-defaults";
+import { PromoCodeInput } from "@/components/forms/promo-code-input";
 
 interface TicketsFormProps {
   event: EventWithParks;
@@ -61,6 +62,7 @@ export function TicketsForm({ event, howHeardOptions, deliveryOptions, surcharge
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
+  const [appliedPromo, setAppliedPromo] = useState<{ promoId: string; code: string; discountAmount: number } | null>(null);
   const { toast } = useToast();
 
   const form = useForm({
@@ -140,7 +142,8 @@ export function TicketsForm({ event, howHeardOptions, deliveryOptions, surcharge
       toast({ title: "You must agree to the terms", variant: "destructive" });
       return;
     }
-    if (pricing.total <= 0) {
+    const finalTotal = Math.max(0, pricing.total - (appliedPromo?.discountAmount ?? 0));
+    if (finalTotal <= 0) {
       toast({ title: "Please select at least one ticket", variant: "destructive" });
       return;
     }
@@ -148,7 +151,7 @@ export function TicketsForm({ event, howHeardOptions, deliveryOptions, surcharge
     setIsSubmitting(true);
     try {
       const { clientSecret: secret } = await createPaymentIntent(
-        pricing.total,
+        finalTotal,
         {
           order_type: "tickets",
           event_id: event.id,
@@ -161,7 +164,7 @@ export function TicketsForm({ event, howHeardOptions, deliveryOptions, surcharge
     } finally {
       setIsSubmitting(false);
     }
-  }, [watched, pricing.total, event.id, toast]);
+  }, [watched, pricing.total, event.id, toast, appliedPromo]);
 
   const handlePaymentSuccess = async (paymentIntentId: string) => {
     try {
@@ -401,6 +404,14 @@ export function TicketsForm({ event, howHeardOptions, deliveryOptions, surcharge
 
         <Separator />
 
+        <PromoCodeInput
+          orderType="tickets"
+          subtotal={pricing.subtotal}
+          onApply={setAppliedPromo}
+        />
+
+        <Separator />
+
         {/* Order Total */}
         <div className="bg-muted/50 rounded-lg p-4 space-y-2">
           <h3 className="font-semibold">Order Summary</h3>
@@ -428,10 +439,16 @@ export function TicketsForm({ event, howHeardOptions, deliveryOptions, surcharge
               <PriceDisplay cents={pricing.surcharge} size="sm" />
             </div>
           )}
+          {appliedPromo && (
+            <div className="flex justify-between text-sm text-green-600">
+              <span>Discount ({appliedPromo.code})</span>
+              <span>−${(appliedPromo.discountAmount / 100).toFixed(2)}</span>
+            </div>
+          )}
           <Separator />
           <div className="flex justify-between font-bold">
             <span>Grand Total</span>
-            <PriceDisplay cents={pricing.total} size="lg" />
+            <PriceDisplay cents={Math.max(0, pricing.total - (appliedPromo?.discountAmount ?? 0))} size="lg" />
           </div>
         </div>
 
@@ -440,14 +457,14 @@ export function TicketsForm({ event, howHeardOptions, deliveryOptions, surcharge
           <button
             type="button"
             onClick={handleCreatePaymentIntent}
-            disabled={isSubmitting || pricing.total <= 0}
+            disabled={isSubmitting || Math.max(0, pricing.total - (appliedPromo?.discountAmount ?? 0)) <= 0}
             className="w-full bg-primary text-primary-foreground py-3 rounded-md font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? "Preparing payment..." : "Proceed to Payment"}
           </button>
         ) : (
           <StripeProvider clientSecret={clientSecret}>
-            <PaymentForm onSuccess={handlePaymentSuccess} totalCents={pricing.total} />
+            <PaymentForm onSuccess={handlePaymentSuccess} totalCents={Math.max(0, pricing.total - (appliedPromo?.discountAmount ?? 0))} />
           </StripeProvider>
         )}
       </form>

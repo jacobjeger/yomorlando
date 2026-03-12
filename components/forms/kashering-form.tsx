@@ -29,6 +29,7 @@ import { createPaymentIntent } from "@/app/actions/payments";
 import { submitKasheringOrder } from "@/app/actions/kashering";
 import { useToast } from "@/hooks/use-toast";
 import type { KasheringPricing } from "@/lib/settings-defaults";
+import { PromoCodeInput } from "@/components/forms/promo-code-input";
 
 interface KasheringFormProps {
   eventId: string;
@@ -44,6 +45,7 @@ export function KasheringForm({ eventId, eventStartDate, eventEndDate, developme
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
+  const [appliedPromo, setAppliedPromo] = useState<{ promoId: string; code: string; discountAmount: number } | null>(null);
   const { toast } = useToast();
 
   const form = useForm({
@@ -92,12 +94,13 @@ export function KasheringForm({ eventId, eventStartDate, eventEndDate, developme
       return;
     }
 
-    if (pricing.total <= 0) return;
+    const finalTotal = Math.max(0, pricing.total - (appliedPromo?.discountAmount ?? 0));
+    if (finalTotal <= 0) return;
 
     setIsSubmitting(true);
     try {
       const { clientSecret: secret } = await createPaymentIntent(
-        pricing.total,
+        finalTotal,
         {
           order_type: "kashering",
           event_id: eventId,
@@ -114,7 +117,7 @@ export function KasheringForm({ eventId, eventStartDate, eventEndDate, developme
     } finally {
       setIsSubmitting(false);
     }
-  }, [form, pricing.total, eventId, watched.email, toast]);
+  }, [form, pricing.total, eventId, watched.email, toast, appliedPromo]);
 
   const handlePaymentSuccess = async (paymentIntentId: string) => {
     try {
@@ -447,6 +450,14 @@ export function KasheringForm({ eventId, eventStartDate, eventEndDate, developme
 
         <Separator />
 
+        <PromoCodeInput
+          orderType="kashering"
+          subtotal={pricing.subtotal}
+          onApply={setAppliedPromo}
+        />
+
+        <Separator />
+
         {/* Order Total */}
         <div className="bg-muted/50 rounded-lg p-4 space-y-2">
           <h3 className="font-semibold">Order Summary</h3>
@@ -481,10 +492,16 @@ export function KasheringForm({ eventId, eventStartDate, eventEndDate, developme
               <PriceDisplay cents={pricing.surcharge} size="sm" />
             </div>
           )}
+          {appliedPromo && (
+            <div className="flex justify-between text-sm text-green-600">
+              <span>Discount ({appliedPromo.code})</span>
+              <span>−${(appliedPromo.discountAmount / 100).toFixed(2)}</span>
+            </div>
+          )}
           <Separator />
           <div className="flex justify-between font-bold">
             <span>Total</span>
-            <PriceDisplay cents={pricing.total} size="lg" />
+            <PriceDisplay cents={Math.max(0, pricing.total - (appliedPromo?.discountAmount ?? 0))} size="lg" />
           </div>
         </div>
 
@@ -493,7 +510,7 @@ export function KasheringForm({ eventId, eventStartDate, eventEndDate, developme
           <button
             type="button"
             onClick={handleCreatePaymentIntent}
-            disabled={isSubmitting || pricing.total <= 0}
+            disabled={isSubmitting || Math.max(0, pricing.total - (appliedPromo?.discountAmount ?? 0)) <= 0}
             className="w-full bg-primary text-primary-foreground py-3 rounded-md font-medium hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? "Preparing payment..." : "Proceed to Payment"}
@@ -502,7 +519,7 @@ export function KasheringForm({ eventId, eventStartDate, eventEndDate, developme
           <StripeProvider clientSecret={clientSecret}>
             <PaymentForm
               onSuccess={handlePaymentSuccess}
-              totalCents={pricing.total}
+              totalCents={Math.max(0, pricing.total - (appliedPromo?.discountAmount ?? 0))}
             />
           </StripeProvider>
         )}

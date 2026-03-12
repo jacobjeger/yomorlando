@@ -42,6 +42,11 @@ export function Footer() {
                   Winter Break
                 </Link>
               </li>
+              <li>
+                <Link href="/faq" className="text-white/60 hover:text-[hsl(38,75%,55%)] transition-colors">
+                  FAQ
+                </Link>
+              </li>
             </ul>
           </div>
 
