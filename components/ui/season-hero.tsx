@@ -9,23 +9,24 @@ interface SeasonHeroProps {
 
 export function SeasonHero({ title, event }: SeasonHeroProps) {
   return (
-    <section className="bg-gradient-to-br from-primary/10 via-background to-primary/5 py-16 md:py-24">
-      <div className="container text-center">
-        <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-3">
+    <section className="relative overflow-hidden bg-[hsl(224,50%,18%)] text-white">
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(38,75%,55%,0.12),transparent_60%)]" />
+      <div className="container relative py-16 md:py-24 text-center">
+        <h1 className="text-3xl md:text-5xl font-bold tracking-tight mb-4">
           {title}
         </h1>
         {event && (
-          <>
-            <p className="text-xl text-muted-foreground mb-2">{event.year}</p>
-            <p className="text-base text-muted-foreground flex items-center justify-center gap-2">
+          <div className="flex flex-col items-center gap-2">
+            <span className="text-[hsl(38,75%,55%)] font-semibold text-lg">{event.year}</span>
+            <p className="text-white/60 flex items-center gap-2">
               <CalendarDays className="h-4 w-4" />
               {format(new Date(event.start_date), "MMMM d")} —{" "}
               {format(new Date(event.end_date), "MMMM d, yyyy")}
             </p>
-          </>
+          </div>
         )}
         {!event && (
-          <p className="text-lg text-muted-foreground">
+          <p className="text-lg text-white/50">
             No upcoming event scheduled. Check back soon!
           </p>
         )}

@@ -1,139 +1,172 @@
 import { createServiceClient } from "@/lib/supabase/server";
 import type { Event, Park, TicketOption, EventDateRange, PickupLocation, HolidayType, EventWithParks } from "@/lib/database.types";
 
+function isConfigured() {
+  return !!(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+}
+
 export async function getUpcomingEvents(): Promise<Event[]> {
-  const supabase = createServiceClient();
-  const now = new Date().toISOString();
+  if (!isConfigured()) return [];
 
-  const { data, error } = await supabase
-    .from("events")
-    .select("*")
-    .eq("is_published", true)
-    .gt("order_close", now)
-    .order("start_date", { ascending: true });
+  try {
+    const supabase = createServiceClient();
+    const now = new Date().toISOString();
 
-  if (error) {
-    console.error("Error fetching upcoming events:", error);
+    const { data, error } = await supabase
+      .from("events")
+      .select("*")
+      .eq("is_published", true)
+      .gt("order_close", now)
+      .order("start_date", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching upcoming events:", error);
+      return [];
+    }
+
+    return (data ?? []) as Event[];
+  } catch (e) {
+    console.error("Failed to fetch upcoming events:", e);
     return [];
   }
-
-  return (data ?? []) as Event[];
 }
 
 export async function getPastEvents(): Promise<Event[]> {
-  const supabase = createServiceClient();
-  const now = new Date().toISOString();
+  if (!isConfigured()) return [];
 
-  const { data, error } = await supabase
-    .from("events")
-    .select("*")
-    .eq("is_published", true)
-    .lte("order_close", now)
-    .order("start_date", { ascending: false })
-    .limit(10);
+  try {
+    const supabase = createServiceClient();
+    const now = new Date().toISOString();
 
-  if (error) {
-    console.error("Error fetching past events:", error);
+    const { data, error } = await supabase
+      .from("events")
+      .select("*")
+      .eq("is_published", true)
+      .lte("order_close", now)
+      .order("start_date", { ascending: false })
+      .limit(10);
+
+    if (error) {
+      console.error("Error fetching past events:", error);
+      return [];
+    }
+
+    return (data ?? []) as Event[];
+  } catch (e) {
+    console.error("Failed to fetch past events:", e);
     return [];
   }
-
-  return (data ?? []) as Event[];
 }
 
 export async function getLatestEventByHoliday(
   holidayType: HolidayType
 ): Promise<Event | null> {
-  const supabase = createServiceClient();
+  if (!isConfigured()) return null;
 
-  const { data, error } = await supabase
-    .from("events")
-    .select("*")
-    .eq("is_published", true)
-    .eq("holiday_type", holidayType)
-    .order("year", { ascending: false })
-    .limit(1)
-    .single();
+  try {
+    const supabase = createServiceClient();
 
-  if (error) {
+    const { data, error } = await supabase
+      .from("events")
+      .select("*")
+      .eq("is_published", true)
+      .eq("holiday_type", holidayType)
+      .order("year", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) return null;
+    return data as Event;
+  } catch {
     return null;
   }
-
-  return data as Event;
 }
 
 export async function getEventWithParks(
   eventId: string
 ): Promise<EventWithParks | null> {
-  const supabase = createServiceClient();
+  if (!isConfigured()) return null;
 
-  const { data: event, error: eventError } = await supabase
-    .from("events")
-    .select("*")
-    .eq("id", eventId)
-    .single();
+  try {
+    const supabase = createServiceClient();
 
-  if (eventError || !event) return null;
+    const { data: event, error: eventError } = await supabase
+      .from("events")
+      .select("*")
+      .eq("id", eventId)
+      .single();
 
-  const { data: parks } = await supabase
-    .from("parks")
-    .select("*")
-    .eq("event_id", eventId)
-    .eq("is_active", true)
-    .order("display_order");
+    if (eventError || !event) return null;
 
-  const { data: pickupLocations } = await supabase
-    .from("pickup_locations")
-    .select("*")
-    .eq("event_id", eventId);
+    const { data: parks } = await supabase
+      .from("parks")
+      .select("*")
+      .eq("event_id", eventId)
+      .eq("is_active", true)
+      .order("display_order");
 
-  const typedParks = (parks ?? []) as Park[];
+    const { data: pickupLocations } = await supabase
+      .from("pickup_locations")
+      .select("*")
+      .eq("event_id", eventId);
 
-  const parksWithOptions = await Promise.all(
-    typedParks.map(async (park) => {
-      const { data: ticketOptions } = await supabase
-        .from("ticket_options")
-        .select("*")
-        .eq("park_id", park.id)
-        .eq("is_active", true)
-        .order("display_order");
+    const typedParks = (parks ?? []) as Park[];
 
-      const { data: dateRanges } = await supabase
-        .from("event_date_ranges")
-        .select("*")
-        .eq("park_id", park.id);
+    const parksWithOptions = await Promise.all(
+      typedParks.map(async (park) => {
+        const { data: ticketOptions } = await supabase
+          .from("ticket_options")
+          .select("*")
+          .eq("park_id", park.id)
+          .eq("is_active", true)
+          .order("display_order");
 
-      return {
-        ...park,
-        ticket_options: (ticketOptions ?? []) as TicketOption[],
-        event_date_ranges: (dateRanges ?? []) as EventDateRange[],
-      };
-    })
-  );
+        const { data: dateRanges } = await supabase
+          .from("event_date_ranges")
+          .select("*")
+          .eq("park_id", park.id);
 
-  return {
-    ...(event as Event),
-    parks: parksWithOptions,
-    pickup_locations: (pickupLocations ?? []) as PickupLocation[],
-  };
+        return {
+          ...park,
+          ticket_options: (ticketOptions ?? []) as TicketOption[],
+          event_date_ranges: (dateRanges ?? []) as EventDateRange[],
+        };
+      })
+    );
+
+    return {
+      ...(event as Event),
+      parks: parksWithOptions,
+      pickup_locations: (pickupLocations ?? []) as PickupLocation[],
+    };
+  } catch {
+    return null;
+  }
 }
 
 export async function getOpenEventForHoliday(
   holidayType: HolidayType
 ): Promise<Event | null> {
-  const supabase = createServiceClient();
-  const now = new Date().toISOString();
+  if (!isConfigured()) return null;
 
-  const { data, error } = await supabase
-    .from("events")
-    .select("*")
-    .eq("is_published", true)
-    .eq("holiday_type", holidayType)
-    .lte("order_open", now)
-    .gt("order_close", now)
-    .order("year", { ascending: false })
-    .limit(1)
-    .single();
+  try {
+    const supabase = createServiceClient();
+    const now = new Date().toISOString();
 
-  if (error) return null;
-  return data as Event;
+    const { data, error } = await supabase
+      .from("events")
+      .select("*")
+      .eq("is_published", true)
+      .eq("holiday_type", holidayType)
+      .lte("order_open", now)
+      .gt("order_close", now)
+      .order("year", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error) return null;
+    return data as Event;
+  } catch {
+    return null;
+  }
 }

@@ -26,7 +26,7 @@ export default async function WinterBreakPage() {
 
       <section className="container py-12 md:py-16">
         {event && isOrderOpen && (
-          <div className="mb-8 text-center">
+          <div className="mb-10 text-center">
             <CountdownTimer
               targetDate={event.order_close}
               label="Order deadline"
@@ -34,7 +34,10 @@ export default async function WinterBreakPage() {
           </div>
         )}
 
-        <h2 className="text-2xl font-bold mb-6">Available Services</h2>
+        <div className="flex items-center gap-3 mb-8">
+          <div className="w-1 h-8 rounded-full bg-[hsl(38,75%,55%)]" />
+          <h2 className="text-2xl font-bold">Available Services</h2>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <ServiceCard
@@ -47,11 +50,17 @@ export default async function WinterBreakPage() {
           />
         </div>
 
-        <div className="mt-12 p-6 rounded-lg border bg-muted/30">
-          <h3 className="text-lg font-semibold mb-3">Important Notes</h3>
-          <ul className="space-y-2 text-sm text-muted-foreground list-disc list-inside">
-            <li>All orders are subject to availability</li>
-            <li>Park ticket orders are final — no refunds or exchanges</li>
+        <div className="mt-12 p-6 rounded-xl border bg-card">
+          <h3 className="text-base font-semibold mb-3">Important Notes</h3>
+          <ul className="space-y-2 text-sm text-muted-foreground">
+            <li className="flex items-start gap-2">
+              <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-muted-foreground/40 shrink-0" />
+              All orders are subject to availability
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-muted-foreground/40 shrink-0" />
+              Park ticket orders are final — no refunds or exchanges
+            </li>
           </ul>
         </div>
       </section>
