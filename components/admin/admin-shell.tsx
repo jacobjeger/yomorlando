@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { CalendarDays, ShoppingCart, Package, LayoutDashboard, LogOut, Settings } from "lucide-react";
+import { CalendarDays, ShoppingCart, Package, LayoutDashboard, LogOut, Settings, HelpCircle, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 
@@ -11,6 +11,8 @@ const adminNav = [
   { href: "/admin/events", label: "Events", icon: CalendarDays },
   { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
   { href: "/admin/inventory", label: "Inventory", icon: Package },
+  { href: "/admin/promo-codes", label: "Promo Codes", icon: Tag },
+  { href: "/admin/faq", label: "FAQ", icon: HelpCircle },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 

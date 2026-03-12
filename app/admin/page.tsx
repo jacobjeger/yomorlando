@@ -12,20 +12,24 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCents } from "@/lib/utils";
-import { format } from "date-fns";
+import { format, subDays } from "date-fns";
 import { ShoppingCart, DollarSign, Ticket, Salad, ChefHat, Clock } from "lucide-react";
 import type { Order } from "@/lib/database.types";
+import { DashboardCharts } from "@/components/admin/dashboard-charts";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminDashboardPage() {
   const supabase = createServiceClient();
 
+  const thirtyDaysAgo = subDays(new Date(), 30).toISOString();
+
   const [
     { count: totalOrders },
     { data: allOrders },
     { data: recentOrders },
     { count: pendingCount },
+    { data: last30DaysOrders },
   ] = await Promise.all([
     supabase.from("orders").select("*", { count: "exact", head: true }),
     supabase.from("orders").select("order_type, total"),
@@ -38,6 +42,11 @@ export default async function AdminDashboardPage() {
       .from("orders")
       .select("*", { count: "exact", head: true })
       .eq("fulfillment_status", "pending"),
+    supabase
+      .from("orders")
+      .select("created_at, total")
+      .gte("created_at", thirtyDaysAgo)
+      .order("created_at", { ascending: true }),
   ]);
 
   const orders = (allOrders ?? []) as { order_type: string; total: number }[];
@@ -47,6 +56,20 @@ export default async function AdminDashboardPage() {
   const ticketCount = orders.filter((o) => o.order_type === "tickets").length;
   const kasheringCount = orders.filter((o) => o.order_type === "kashering").length;
   const lettuceCount = orders.filter((o) => o.order_type === "lettuce").length;
+
+  // Aggregate revenue by day for chart
+  const revenueMap = new Map<string, number>();
+  for (const o of (last30DaysOrders ?? []) as { created_at: string; total: number }[]) {
+    const day = format(new Date(o.created_at), "MMM d");
+    revenueMap.set(day, (revenueMap.get(day) ?? 0) + o.total);
+  }
+  const revenueByDay = Array.from(revenueMap.entries()).map(([date, revenue]) => ({ date, revenue }));
+
+  const ordersByType = [
+    { name: "Tickets", value: ticketCount },
+    { name: "Kashering", value: kasheringCount },
+    { name: "Lettuce", value: lettuceCount },
+  ];
 
   const statusColors: Record<string, string> = {
     pending: "bg-yellow-100 text-yellow-800",
@@ -143,6 +166,9 @@ export default async function AdminDashboardPage() {
           </Card>
         </Link>
       </div>
+
+      {/* Charts */}
+      <DashboardCharts revenueByDay={revenueByDay} ordersByType={ordersByType} />
 
       {/* Recent Orders */}
       <Card>

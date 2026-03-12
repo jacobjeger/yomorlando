@@ -84,6 +84,8 @@ export interface Order {
   fulfillment_status: FulfillmentStatus;
   how_heard: string | null;
   comments: string | null;
+  promo_code_id: string | null;
+  discount: number;
   created_at: string;
 }
 
@@ -126,6 +128,34 @@ export interface LettuceWaitlist {
   email: string;
   phone: string;
   bags_requested: number;
+  created_at: string;
+}
+
+export interface FaqItem {
+  id: string;
+  question: string;
+  answer: string;
+  display_order: number;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export type DiscountType = "percentage" | "fixed";
+export type PromoAppliesTo = "all" | "tickets" | "kashering" | "lettuce";
+
+export interface PromoCode {
+  id: string;
+  code: string;
+  discount_type: DiscountType;
+  discount_value: number;
+  min_order_amount: number;
+  max_uses: number | null;
+  current_uses: number;
+  applies_to: PromoAppliesTo;
+  valid_from: string | null;
+  valid_until: string | null;
+  is_active: boolean;
   created_at: string;
 }
 
@@ -203,6 +233,16 @@ export interface Database {
         Row: { key: string; value: unknown; updated_at: string };
         Insert: { key: string; value: unknown; updated_at?: string };
         Update: Partial<{ key: string; value: unknown; updated_at: string }>;
+      };
+      faq_items: {
+        Row: FaqItem;
+        Insert: Omit<FaqItem, "id" | "created_at" | "updated_at">;
+        Update: Partial<Omit<FaqItem, "id" | "created_at">>;
+      };
+      promo_codes: {
+        Row: PromoCode;
+        Insert: Omit<PromoCode, "id" | "created_at" | "current_uses">;
+        Update: Partial<Omit<PromoCode, "id" | "created_at">>;
       };
     };
     Enums: {
