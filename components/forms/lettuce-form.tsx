@@ -27,12 +27,17 @@ import { calculateLettuceTotal } from "@/lib/pricing/lettuce";
 import { createPaymentIntent } from "@/app/actions/payments";
 import { submitLettuceOrder } from "@/app/actions/lettuce";
 import { useToast } from "@/hooks/use-toast";
+import type { LettucePricing } from "@/lib/settings-defaults";
 
 interface LettuceFormProps {
   eventId: string;
+  developments?: string[];
+  lettucePricing?: LettucePricing;
+  surchargeRate?: number;
 }
 
-export function LettuceForm({ eventId }: LettuceFormProps) {
+export function LettuceForm({ eventId, developments, lettucePricing, surchargeRate }: LettuceFormProps) {
+  const devOptions = developments ?? [...DELIVERY_DEVELOPMENTS];
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
@@ -62,6 +67,8 @@ export function LettuceForm({ eventId }: LettuceFormProps) {
     isDelivery: String(watched.deliveryMethod) === "delivery",
     donationDollars: watched.donation || 0,
     addSurcharge: String(watched.addSurcharge) === "yes",
+    pricing: lettucePricing,
+    surchargeRate,
   });
 
   const handleCreatePaymentIntent = useCallback(async () => {
@@ -191,7 +198,7 @@ export function LettuceForm({ eventId }: LettuceFormProps) {
           name="bags"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Number of Bags ($25/bag)</FormLabel>
+              <FormLabel>Number of Bags (${((lettucePricing?.price_per_bag ?? 2500) / 100)}/bag)</FormLabel>
               <FormControl>
                 <QuantityStepper
                   value={field.value}
@@ -228,7 +235,7 @@ export function LettuceForm({ eventId }: LettuceFormProps) {
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="delivery" id="delivery" />
                     <Label htmlFor="delivery" className="font-normal cursor-pointer">
-                      Delivery — $30 flat fee
+                      Delivery — ${((lettucePricing?.delivery_fee ?? 3000) / 100)} flat fee
                     </Label>
                   </div>
                 </RadioGroup>
@@ -254,7 +261,7 @@ export function LettuceForm({ eventId }: LettuceFormProps) {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {DELIVERY_DEVELOPMENTS.map((dev) => (
+                      {devOptions.map((dev) => (
                         <SelectItem key={dev} value={dev}>
                           {dev}
                         </SelectItem>
@@ -297,7 +304,7 @@ export function LettuceForm({ eventId }: LettuceFormProps) {
           )}
           {pricing.surcharge > 0 && (
             <div className="flex justify-between text-sm">
-              <span>CC Surcharge (3%)</span>
+              <span>CC Surcharge ({((surchargeRate ?? 0.03) * 100).toFixed(0)}%)</span>
               <PriceDisplay cents={pricing.surcharge} size="sm" />
             </div>
           )}

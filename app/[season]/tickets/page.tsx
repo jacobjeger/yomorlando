@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getOpenEventForHoliday, getEventWithParks } from "@/lib/queries/events";
+import { getAllSettings } from "@/lib/queries/settings";
 import { TicketsForm } from "@/components/forms/tickets-form";
 import type { HolidayType } from "@/lib/database.types";
 import type { Metadata } from "next";
@@ -33,7 +34,10 @@ export default async function TicketsPage({
   const seasonInfo = seasonMap[params.season];
   if (!seasonInfo) notFound();
 
-  const event = await getOpenEventForHoliday(seasonInfo.holiday);
+  const [event, settings] = await Promise.all([
+    getOpenEventForHoliday(seasonInfo.holiday),
+    getAllSettings(),
+  ]);
 
   if (!event) {
     return (
@@ -73,7 +77,12 @@ export default async function TicketsPage({
         Discounted theme park tickets — {seasonInfo.label} {event.year}
       </p>
 
-      <TicketsForm event={eventWithParks} />
+      <TicketsForm
+        event={eventWithParks}
+        howHeardOptions={settings.how_heard_options}
+        deliveryOptions={settings.ticket_delivery_options}
+        surchargeRate={settings.surcharge_rate.rate}
+      />
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { createServiceClient } from "@/lib/supabase/server";
 import { sendLettuceConfirmation } from "@/app/actions/emails";
+import { getSetting } from "@/lib/queries/settings";
 import type { LettuceFormValues, WaitlistFormValues } from "@/lib/validations/lettuce";
 
 interface LettuceOrderData extends LettuceFormValues {
@@ -19,6 +20,7 @@ interface LettuceOrderData extends LettuceFormValues {
 
 export async function submitLettuceOrder(data: LettuceOrderData) {
   const supabase = createServiceClient();
+  const lettucePricing = await getSetting("lettuce_pricing");
   const customerName = `${data.firstName} ${data.lastName}`;
 
   // Create order
@@ -48,14 +50,16 @@ export async function submitLettuceOrder(data: LettuceOrderData) {
   }
 
   // Create order items
+  const bagPrice = lettucePricing.price_per_bag;
+  const deliveryFeeAmount = lettucePricing.delivery_fee;
   const items = [
     {
       order_id: order.id,
       item_type: "lettuce",
       description: `Checked Lettuce (${data.bags} bag${data.bags > 1 ? "s" : ""})`,
       quantity: data.bags,
-      unit_price: 2500,
-      subtotal: data.bags * 2500,
+      unit_price: bagPrice,
+      subtotal: data.bags * bagPrice,
       delivery_method: data.deliveryMethod,
     },
   ];
@@ -66,8 +70,8 @@ export async function submitLettuceOrder(data: LettuceOrderData) {
       item_type: "delivery_fee",
       description: "Delivery Fee",
       quantity: 1,
-      unit_price: 3000,
-      subtotal: 3000,
+      unit_price: deliveryFeeAmount,
+      subtotal: deliveryFeeAmount,
       delivery_method: "delivery",
     });
   }

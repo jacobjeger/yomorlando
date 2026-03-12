@@ -39,9 +39,13 @@ import { createPaymentIntent } from "@/app/actions/payments";
 import { submitTicketOrder } from "@/app/actions/tickets";
 import { useToast } from "@/hooks/use-toast";
 import type { EventWithParks, TicketOption } from "@/lib/database.types";
+import type { DeliveryOption } from "@/lib/settings-defaults";
 
 interface TicketsFormProps {
   event: EventWithParks;
+  howHeardOptions?: string[];
+  deliveryOptions?: DeliveryOption[];
+  surchargeRate?: number;
 }
 
 const PARK_LABELS: Record<string, string> = {
@@ -51,7 +55,9 @@ const PARK_LABELS: Record<string, string> = {
   other: "Other Parks",
 };
 
-export function TicketsForm({ event }: TicketsFormProps) {
+export function TicketsForm({ event, howHeardOptions, deliveryOptions, surchargeRate }: TicketsFormProps) {
+  const howHeardOpts = howHeardOptions ?? [...HOW_HEARD_OPTIONS];
+  const deliveryOpts: DeliveryOption[] = deliveryOptions ?? (DELIVERY_OPTIONS as unknown as DeliveryOption[]);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
@@ -116,6 +122,8 @@ export function TicketsForm({ event }: TicketsFormProps) {
     deliveryMethod: String(watched.deliveryMethod),
     donationDollars: watched.donation || 0,
     addSurcharge: String(watched.addSurcharge) === "yes",
+    deliveryOptions: deliveryOpts,
+    surchargeRate,
   });
 
   const handleCreatePaymentIntent = useCallback(async () => {
@@ -263,7 +271,7 @@ export function TicketsForm({ event }: TicketsFormProps) {
                   <SelectTrigger><SelectValue placeholder="Select..." /></SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {HOW_HEARD_OPTIONS.map((opt) => (
+                  {howHeardOpts.map((opt) => (
                     <SelectItem key={opt} value={opt}>{opt}</SelectItem>
                   ))}
                 </SelectContent>
@@ -319,7 +327,7 @@ export function TicketsForm({ event }: TicketsFormProps) {
               <FormLabel>Ticket Delivery</FormLabel>
               <FormControl>
                 <RadioGroup onValueChange={field.onChange} value={field.value as string} className="space-y-2">
-                  {DELIVERY_OPTIONS.map((opt) => (
+                  {deliveryOpts.map((opt) => (
                     <div key={opt.value} className="flex items-center space-x-2">
                       <RadioGroupItem value={opt.value} id={`del-${opt.value}`} />
                       <Label htmlFor={`del-${opt.value}`} className="font-normal cursor-pointer">
@@ -416,7 +424,7 @@ export function TicketsForm({ event }: TicketsFormProps) {
           )}
           {pricing.surcharge > 0 && (
             <div className="flex justify-between text-sm">
-              <span>CC Surcharge (3%)</span>
+              <span>CC Surcharge ({((surchargeRate ?? 0.03) * 100).toFixed(0)}%)</span>
               <PriceDisplay cents={pricing.surcharge} size="sm" />
             </div>
           )}

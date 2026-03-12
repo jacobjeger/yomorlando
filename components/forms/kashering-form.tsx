@@ -28,14 +28,19 @@ import { calculateKasheringTotal } from "@/lib/pricing/kashering";
 import { createPaymentIntent } from "@/app/actions/payments";
 import { submitKasheringOrder } from "@/app/actions/kashering";
 import { useToast } from "@/hooks/use-toast";
+import type { KasheringPricing } from "@/lib/settings-defaults";
 
 interface KasheringFormProps {
   eventId: string;
   eventStartDate: string;
   eventEndDate: string;
+  developments?: string[];
+  kasheringPricing?: KasheringPricing;
+  surchargeRate?: number;
 }
 
-export function KasheringForm({ eventId, eventStartDate, eventEndDate }: KasheringFormProps) {
+export function KasheringForm({ eventId, eventStartDate, eventEndDate, developments, kasheringPricing, surchargeRate }: KasheringFormProps) {
+  const devOptions = developments ?? [...DEVELOPMENTS];
   const [clientSecret, setClientSecret] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderComplete, setOrderComplete] = useState(false);
@@ -73,6 +78,8 @@ export function KasheringForm({ eventId, eventStartDate, eventEndDate }: Kasheri
     counterRollQty: watched.counterRollQty || 0,
     donationDollars: watched.donation || 0,
     addSurcharge: watched.addSurcharge === "yes",
+    pricing: kasheringPricing,
+    surchargeRate,
   });
 
   const handleCreatePaymentIntent = useCallback(async () => {
@@ -226,7 +233,7 @@ export function KasheringForm({ eventId, eventStartDate, eventEndDate }: Kasheri
                   value={field.value}
                   className="grid grid-cols-1 sm:grid-cols-2 gap-2"
                 >
-                  {DEVELOPMENTS.map((dev) => (
+                  {devOptions.map((dev) => (
                     <div key={dev} className="flex items-center space-x-2">
                       <RadioGroupItem value={dev} id={`dev-${dev}`} />
                       <Label htmlFor={`dev-${dev}`} className="font-normal cursor-pointer">
@@ -383,7 +390,7 @@ export function KasheringForm({ eventId, eventStartDate, eventEndDate }: Kasheri
                 </FormLabel>
                 {watched.development === "Solara" && (
                   <p className="text-xs text-muted-foreground">
-                    $75 discount per house applied
+                    ${((kasheringPricing?.solara_discount ?? 7500) / 100)} discount per house applied
                   </p>
                 )}
               </div>
@@ -403,7 +410,7 @@ export function KasheringForm({ eventId, eventStartDate, eventEndDate }: Kasheri
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center justify-between">
-                  <FormLabel>Metal Cooking Ring Sets ($60/set)</FormLabel>
+                  <FormLabel>Metal Cooking Ring Sets (${((kasheringPricing?.ring_set_price ?? 6000) / 100)}/set)</FormLabel>
                   <QuantityStepper
                     value={field.value}
                     onChange={field.onChange}
@@ -420,7 +427,7 @@ export function KasheringForm({ eventId, eventStartDate, eventEndDate }: Kasheri
             render={({ field }) => (
               <FormItem>
                 <div className="flex items-center justify-between">
-                  <FormLabel>Counter Cover Rolls ($35/roll)</FormLabel>
+                  <FormLabel>Counter Cover Rolls (${((kasheringPricing?.counter_roll_price ?? 3500) / 100)}/roll)</FormLabel>
                   <QuantityStepper
                     value={field.value}
                     onChange={field.onChange}
@@ -470,7 +477,7 @@ export function KasheringForm({ eventId, eventStartDate, eventEndDate }: Kasheri
           )}
           {pricing.surcharge > 0 && (
             <div className="flex justify-between text-sm">
-              <span>CC Surcharge (3%)</span>
+              <span>CC Surcharge ({((surchargeRate ?? 0.03) * 100).toFixed(0)}%)</span>
               <PriceDisplay cents={pricing.surcharge} size="sm" />
             </div>
           )}

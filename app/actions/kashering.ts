@@ -2,6 +2,7 @@
 
 import { createServiceClient } from "@/lib/supabase/server";
 import { sendKasheringConfirmation } from "@/app/actions/emails";
+import { getSetting } from "@/lib/queries/settings";
 import type { KasheringFormValues } from "@/lib/validations/kashering";
 
 interface KasheringOrderData extends KasheringFormValues {
@@ -20,6 +21,7 @@ interface KasheringOrderData extends KasheringFormValues {
 
 export async function submitKasheringOrder(data: KasheringOrderData) {
   const supabase = createServiceClient();
+  const kasheringPricing = await getSetting("kashering_pricing");
 
   const customerName = `${data.firstName} ${data.lastName}`;
 
@@ -80,24 +82,26 @@ export async function submitKasheringOrder(data: KasheringOrderData) {
   });
 
   if (data.ringSetQty > 0) {
+    const ringPrice = kasheringPricing.ring_set_price;
     items.push({
       order_id: order.id,
       item_type: "ring_set",
       description: "Metal Cooking Ring Sets",
       quantity: data.ringSetQty,
-      unit_price: 6000,
-      subtotal: data.ringSetQty * 6000,
+      unit_price: ringPrice,
+      subtotal: data.ringSetQty * ringPrice,
     });
   }
 
   if (data.counterRollQty > 0) {
+    const rollPrice = kasheringPricing.counter_roll_price;
     items.push({
       order_id: order.id,
       item_type: "counter_roll",
       description: "Counter Cover Rolls",
       quantity: data.counterRollQty,
-      unit_price: 3500,
-      subtotal: data.counterRollQty * 3500,
+      unit_price: rollPrice,
+      subtotal: data.counterRollQty * rollPrice,
     });
   }
 
