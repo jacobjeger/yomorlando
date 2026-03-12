@@ -258,3 +258,77 @@ export async function updateLettuceInventory(eventId: string, maxBags: number) {
 
   revalidatePath(`/admin/events/${eventId}`);
 }
+
+export async function deleteEvent(id: string) {
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("events").delete().eq("id", id);
+  if (error) throw new Error("Failed to delete event");
+  revalidatePath("/admin/events");
+}
+
+export async function deletePark(parkId: string, eventId: string) {
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("parks").delete().eq("id", parkId);
+  if (error) throw new Error("Failed to delete park");
+  revalidatePath(`/admin/events/${eventId}`);
+}
+
+export async function deleteTicketOption(optionId: string) {
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("ticket_options").delete().eq("id", optionId);
+  if (error) throw new Error("Failed to delete ticket option");
+}
+
+export async function updateTicketOption(
+  optionId: string,
+  data: {
+    option_code?: string;
+    label?: string;
+    description?: string;
+    price_child?: number;
+    price_adult?: number;
+    includes_epic?: boolean;
+    date_restriction_start?: string | null;
+    date_restriction_end?: string | null;
+    child_age_min?: number;
+    child_age_max?: number | null;
+    adult_age_min?: number;
+    is_active?: boolean;
+    display_order?: number;
+  }
+) {
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("ticket_options").update(data).eq("id", optionId);
+  if (error) throw new Error("Failed to update ticket option");
+}
+
+export async function deleteDateRange(rangeId: string) {
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("event_date_ranges").delete().eq("id", rangeId);
+  if (error) throw new Error("Failed to delete date range");
+}
+
+export async function updateDateRange(
+  rangeId: string,
+  data: { label?: string; range_start?: string; range_end?: string }
+) {
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("event_date_ranges").update(data).eq("id", rangeId);
+  if (error) throw new Error("Failed to update date range");
+}
+
+export async function deletePickupLocation(locationId: string, eventId: string) {
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("pickup_locations").delete().eq("id", locationId);
+  if (error) throw new Error("Failed to delete pickup location");
+  revalidatePath(`/admin/events/${eventId}`);
+}
+
+export async function updatePickupLocation(
+  locationId: string,
+  data: { name?: string; address?: string; notes?: string }
+) {
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("pickup_locations").update(data).eq("id", locationId);
+  if (error) throw new Error("Failed to update pickup location");
+}

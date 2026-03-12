@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/select";
 import { formatCents } from "@/lib/utils";
 import { format } from "date-fns";
-import { updateOrderStatus, refundOrder } from "@/app/actions/admin/orders";
+import { updateOrderStatus, refundOrder, deleteOrder } from "@/app/actions/admin/orders";
 import { useToast } from "@/hooks/use-toast";
 import type { Order, OrderItem, KasheringDetails, FulfillmentStatus } from "@/lib/database.types";
 
@@ -47,6 +47,17 @@ export function OrderDetail({ order, items, kasheringDetails }: OrderDetailProps
       toast({ title: "Refund failed", variant: "destructive" });
     } finally {
       setRefunding(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm("Are you sure you want to permanently delete this order? This cannot be undone.")) return;
+    try {
+      await deleteOrder(order.id);
+      toast({ title: "Order deleted" });
+      router.push("/admin/orders");
+    } catch {
+      toast({ title: "Failed to delete order", variant: "destructive" });
     }
   };
 
@@ -158,15 +169,24 @@ export function OrderDetail({ order, items, kasheringDetails }: OrderDetailProps
                 </SelectContent>
               </Select>
             </div>
-            {order.stripe_payment_intent_id && (
+            <div className="flex gap-2">
+              {order.stripe_payment_intent_id && (
+                <Button
+                  variant="destructive"
+                  onClick={handleRefund}
+                  disabled={refunding}
+                >
+                  {refunding ? "Processing Refund..." : "Issue Refund"}
+                </Button>
+              )}
               <Button
-                variant="destructive"
-                onClick={handleRefund}
-                disabled={refunding}
+                variant="outline"
+                className="text-destructive hover:text-destructive"
+                onClick={handleDelete}
               >
-                {refunding ? "Processing Refund..." : "Issue Refund"}
+                Delete Order
               </Button>
-            )}
+            </div>
           </CardContent>
         </Card>
       </div>

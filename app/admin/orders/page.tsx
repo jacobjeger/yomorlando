@@ -10,19 +10,15 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { format } from "date-fns";
 import { formatCents } from "@/lib/utils";
 import { Download } from "lucide-react";
+import { OrderFilters } from "@/components/admin/order-filters";
 import type { Order } from "@/lib/database.types";
 
 export const dynamic = "force-dynamic";
+
+const PAGE_SIZE = 25;
 
 export default async function AdminOrdersPage({
   searchParams,
@@ -31,9 +27,13 @@ export default async function AdminOrdersPage({
 }) {
   const supabase = createServiceClient();
 
+  const page = parseInt(searchParams.page || "1");
+  const from = (page - 1) * PAGE_SIZE;
+  const to = from + PAGE_SIZE - 1;
+
   let query = supabase
     .from("orders")
-    .select("*")
+    .select("*", { count: "exact" })
     .order("created_at", { ascending: false });
 
   if (searchParams.order_type) {
@@ -42,9 +42,16 @@ export default async function AdminOrdersPage({
   if (searchParams.status) {
     query = query.eq("fulfillment_status", searchParams.status);
   }
+  if (searchParams.search) {
+    const term = searchParams.search.replace(/%/g, "");
+    query = query.or(
+      `customer_name.ilike.%${term}%,customer_email.ilike.%${term}%`
+    );
+  }
 
-  const { data } = await query.limit(100);
+  const { data, count } = await query.range(from, to);
   const orders = (data ?? []) as Order[];
+  const totalCount = count ?? 0;
 
   const statusColors: Record<string, string> = {
     pending: "bg-yellow-100 text-yellow-800",
@@ -53,50 +60,22 @@ export default async function AdminOrdersPage({
     picked_up: "bg-purple-100 text-purple-800",
   };
 
-  const currentParams = new URLSearchParams();
-  if (searchParams.order_type) currentParams.set("order_type", searchParams.order_type);
-  if (searchParams.status) currentParams.set("status", searchParams.status);
+  const exportParams = new URLSearchParams();
+  if (searchParams.order_type) exportParams.set("order_type", searchParams.order_type);
+  if (searchParams.status) exportParams.set("status", searchParams.status);
 
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Orders</h1>
         <Button asChild variant="outline">
-          <a href={`/api/admin/orders/export?${currentParams.toString()}`}>
+          <a href={`/api/admin/orders/export?${exportParams.toString()}`}>
             <Download className="h-4 w-4 mr-2" /> Export CSV
           </a>
         </Button>
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-4 mb-6">
-        <form className="flex gap-4">
-          <Select name="order_type" defaultValue={searchParams.order_type || "all"}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Order Type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
-              <SelectItem value="tickets">Tickets</SelectItem>
-              <SelectItem value="kashering">Kashering</SelectItem>
-              <SelectItem value="lettuce">Lettuce</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select name="status" defaultValue={searchParams.status || "all"}>
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="fulfilled">Fulfilled</SelectItem>
-              <SelectItem value="shipped">Shipped</SelectItem>
-              <SelectItem value="picked_up">Picked Up</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button type="submit" variant="secondary">Filter</Button>
-        </form>
-      </div>
+      <OrderFilters totalCount={totalCount} pageSize={PAGE_SIZE} />
 
       <div className="border rounded-lg">
         <Table>

@@ -43,3 +43,10 @@ export async function refundOrder(orderId: string) {
 
   return result;
 }
+
+export async function deleteOrder(orderId: string) {
+  const supabase = createServiceClient();
+  const { error } = await supabase.from("orders").delete().eq("id", orderId);
+  if (error) throw new Error("Failed to delete order");
+  revalidatePath("/admin/orders");
+}

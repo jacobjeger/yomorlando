@@ -21,13 +21,18 @@ import {
   togglePublished,
   duplicateEvent,
   addPark,
-  addTicketOption,
-  addDateRange,
-  addPickupLocation,
+  deleteEvent,
+  deletePark,
+  deleteTicketOption,
+  deleteDateRange,
+  deletePickupLocation,
   updateLettuceInventory,
 } from "@/app/actions/admin/events";
 import { useToast } from "@/hooks/use-toast";
-import { Copy, Plus, Loader2 } from "lucide-react";
+import { Copy, Plus, Loader2, Pencil, Trash2 } from "lucide-react";
+import { TicketOptionDialog } from "./ticket-option-dialog";
+import { DateRangeDialog } from "./date-range-dialog";
+import { PickupLocationDialog } from "./pickup-location-dialog";
 import type {
   Event,
   Park,
@@ -57,6 +62,18 @@ export function EventEditor({
   const router = useRouter();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
+
+  // Dialog state
+  const [optionDialogOpen, setOptionDialogOpen] = useState(false);
+  const [optionDialogParkId, setOptionDialogParkId] = useState("");
+  const [editingOption, setEditingOption] = useState<TicketOption | undefined>();
+
+  const [rangeDialogOpen, setRangeDialogOpen] = useState(false);
+  const [rangeDialogParkId, setRangeDialogParkId] = useState("");
+  const [editingRange, setEditingRange] = useState<EventDateRange | undefined>();
+
+  const [locationDialogOpen, setLocationDialogOpen] = useState(false);
+  const [editingLocation, setEditingLocation] = useState<PickupLocation | undefined>();
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -90,47 +107,86 @@ export function EventEditor({
     router.push(`/admin/events/${newEvent.id}`);
   };
 
+  const handleDeleteEvent = async () => {
+    if (!confirm("Are you sure you want to delete this event? This will also delete all parks, ticket options, orders, and related data.")) return;
+    try {
+      await deleteEvent(event.id);
+      toast({ title: "Event deleted" });
+      router.push("/admin/events");
+    } catch {
+      toast({ title: "Failed to delete event", variant: "destructive" });
+    }
+  };
+
   const handleAddPark = async (parkName: string) => {
     await addPark(event.id, parkName);
     router.refresh();
   };
 
-  const handleAddOption = async (parkId: string) => {
-    await addTicketOption(parkId, {
-      option_code: "NEW",
-      label: "New Option",
-      description: "",
-      price_child: 0,
-      price_adult: 0,
-      includes_epic: false,
-      child_age_min: 3,
-      child_age_max: 9,
-      adult_age_min: 10,
-    });
-    router.refresh();
+  const handleDeletePark = async (parkId: string) => {
+    if (!confirm("Delete this park and all its ticket options and date ranges?")) return;
+    try {
+      await deletePark(parkId, event.id);
+      toast({ title: "Park deleted" });
+      router.refresh();
+    } catch {
+      toast({ title: "Failed to delete park", variant: "destructive" });
+    }
   };
 
-  const handleAddDateRange = async (parkId: string) => {
-    await addDateRange(parkId, {
-      label: "New Range",
-      range_start: event.start_date,
-      range_end: event.end_date,
-    });
-    router.refresh();
+  const handleDeleteOption = async (optionId: string) => {
+    if (!confirm("Delete this ticket option?")) return;
+    try {
+      await deleteTicketOption(optionId);
+      toast({ title: "Ticket option deleted" });
+      router.refresh();
+    } catch {
+      toast({ title: "Failed to delete", variant: "destructive" });
+    }
   };
 
-  const handleAddPickup = async () => {
-    await addPickupLocation(event.id, {
-      name: "New Location",
-      address: "",
-      notes: "",
-    });
-    router.refresh();
+  const handleDeleteRange = async (rangeId: string) => {
+    if (!confirm("Delete this date range?")) return;
+    try {
+      await deleteDateRange(rangeId);
+      toast({ title: "Date range deleted" });
+      router.refresh();
+    } catch {
+      toast({ title: "Failed to delete", variant: "destructive" });
+    }
+  };
+
+  const handleDeleteLocation = async (locationId: string) => {
+    if (!confirm("Delete this pickup location?")) return;
+    try {
+      await deletePickupLocation(locationId, event.id);
+      toast({ title: "Pickup location deleted" });
+      router.refresh();
+    } catch {
+      toast({ title: "Failed to delete", variant: "destructive" });
+    }
   };
 
   const handleUpdateLettuce = async (maxBags: number) => {
     await updateLettuceInventory(event.id, maxBags);
     router.refresh();
+  };
+
+  const openOptionDialog = (parkId: string, option?: TicketOption) => {
+    setOptionDialogParkId(parkId);
+    setEditingOption(option);
+    setOptionDialogOpen(true);
+  };
+
+  const openRangeDialog = (parkId: string, range?: EventDateRange) => {
+    setRangeDialogParkId(parkId);
+    setEditingRange(range);
+    setRangeDialogOpen(true);
+  };
+
+  const openLocationDialog = (location?: PickupLocation) => {
+    setEditingLocation(location);
+    setLocationDialogOpen(true);
   };
 
   return (
@@ -143,6 +199,9 @@ export function EventEditor({
           </Badge>
         </div>
         <div className="flex gap-2">
+          <Button variant="destructive" size="sm" onClick={handleDeleteEvent}>
+            <Trash2 className="h-4 w-4 mr-2" /> Delete
+          </Button>
           <Button variant="outline" onClick={handleDuplicate}>
             <Copy className="h-4 w-4 mr-2" /> Duplicate
           </Button>
@@ -235,9 +294,19 @@ export function EventEditor({
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                       <span className="capitalize">{park.park_name}</span>
-                      <Badge variant={park.is_active ? "default" : "secondary"}>
-                        {park.is_active ? "Active" : "Inactive"}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={park.is_active ? "default" : "secondary"}>
+                          {park.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => handleDeletePark(park.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -245,14 +314,32 @@ export function EventEditor({
                     <div>
                       <h4 className="font-medium text-sm mb-2">Date Ranges</h4>
                       {parkDateRanges.map((range) => (
-                        <div key={range.id} className="text-sm p-2 bg-muted/30 rounded mb-1">
-                          {range.label}: {range.range_start} — {range.range_end}
+                        <div key={range.id} className="text-sm p-2 bg-muted/30 rounded mb-1 flex items-center justify-between">
+                          <span>{range.label}: {range.range_start} — {range.range_end}</span>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => openRangeDialog(park.id, range)}
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-destructive hover:text-destructive"
+                              onClick={() => handleDeleteRange(range.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleAddDateRange(park.id)}
+                        onClick={() => openRangeDialog(park.id)}
                         className="mt-2"
                       >
                         <Plus className="h-3 w-3 mr-1" /> Add Date Range
@@ -263,20 +350,43 @@ export function EventEditor({
                     <div>
                       <h4 className="font-medium text-sm mb-2">Ticket Options</h4>
                       {parkOptions.map((option) => (
-                        <div key={option.id} className="text-sm p-2 bg-muted/30 rounded mb-1 flex justify-between">
+                        <div key={option.id} className="text-sm p-2 bg-muted/30 rounded mb-1 flex items-center justify-between">
                           <span>
                             [{option.option_code}] {option.label}
-                            {option.includes_epic && " (EPIC)"}
+                            {option.includes_epic && (
+                              <Badge variant="outline" className="ml-2 text-xs">EPIC</Badge>
+                            )}
+                            {!option.is_active && (
+                              <Badge variant="secondary" className="ml-2 text-xs">Inactive</Badge>
+                            )}
                           </span>
-                          <span>
-                            Child: ${(option.price_child / 100).toFixed(2)} | Adult: ${(option.price_adult / 100).toFixed(2)}
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground">
+                              ${(option.price_child / 100).toFixed(2)} / ${(option.price_adult / 100).toFixed(2)}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => openOptionDialog(park.id, option)}
+                            >
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-destructive hover:text-destructive"
+                              onClick={() => handleDeleteOption(option.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                       ))}
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleAddOption(park.id)}
+                        onClick={() => openOptionDialog(park.id)}
                         className="mt-2"
                       >
                         <Plus className="h-3 w-3 mr-1" /> Add Option
@@ -295,13 +405,33 @@ export function EventEditor({
             <CardHeader><CardTitle>Pickup Locations</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               {pickupLocations.map((loc) => (
-                <div key={loc.id} className="p-3 bg-muted/30 rounded">
-                  <p className="font-medium">{loc.name}</p>
-                  {loc.address && <p className="text-sm text-muted-foreground">{loc.address}</p>}
-                  {loc.notes && <p className="text-sm text-muted-foreground">{loc.notes}</p>}
+                <div key={loc.id} className="p-3 bg-muted/30 rounded flex items-start justify-between">
+                  <div>
+                    <p className="font-medium">{loc.name}</p>
+                    {loc.address && <p className="text-sm text-muted-foreground">{loc.address}</p>}
+                    {loc.notes && <p className="text-sm text-muted-foreground">{loc.notes}</p>}
+                  </div>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => openLocationDialog(loc)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => handleDeleteLocation(loc.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
-              <Button variant="outline" onClick={handleAddPickup}>
+              <Button variant="outline" onClick={() => openLocationDialog()}>
                 <Plus className="h-4 w-4 mr-2" /> Add Location
               </Button>
             </CardContent>
@@ -341,6 +471,35 @@ export function EventEditor({
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Dialogs */}
+      <TicketOptionDialog
+        parkId={optionDialogParkId}
+        option={editingOption}
+        open={optionDialogOpen}
+        onOpenChange={(open) => {
+          setOptionDialogOpen(open);
+          if (!open) setEditingOption(undefined);
+        }}
+      />
+      <DateRangeDialog
+        parkId={rangeDialogParkId}
+        dateRange={editingRange}
+        open={rangeDialogOpen}
+        onOpenChange={(open) => {
+          setRangeDialogOpen(open);
+          if (!open) setEditingRange(undefined);
+        }}
+      />
+      <PickupLocationDialog
+        eventId={event.id}
+        location={editingLocation}
+        open={locationDialogOpen}
+        onOpenChange={(open) => {
+          setLocationDialogOpen(open);
+          if (!open) setEditingLocation(undefined);
+        }}
+      />
     </div>
   );
 }
