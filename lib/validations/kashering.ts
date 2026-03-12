@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { addressSchema, nameSchema, contactSchema } from "./common";
+import { addressSchema } from "./common";
 
 export const DEVELOPMENTS = [
   "Solara",
@@ -14,34 +14,23 @@ export const DEVELOPMENTS = [
   "Other",
 ] as const;
 
-export const kasheringFormSchema = z
-  .object({
-    ...nameSchema.shape,
-    ...contactSchema.shape,
-    billingAddress: addressSchema,
-    villaAddress: addressSchema.optional(),
-    development: z.string().min(1, "Development is required"),
-    developmentOther: z.string().optional(),
-    accessDay: z.string().min(1, "Access day is required"),
-    numBedrooms: z.number().int().min(1, "Number of bedrooms is required"),
-    numHouses: z.number().int().min(1, "At least 1 house is required"),
-    shulMembership: z.boolean().default(false),
-    ringSetQty: z.number().int().min(0).default(0),
-    counterRollQty: z.number().int().min(0).default(0),
-    donation: z.number().min(0).default(0),
-    addSurcharge: z.enum(["yes", "no"]).default("no"),
-  })
-  .refine(
-    (data) => {
-      if (data.development === "Other") {
-        return !!data.developmentOther && data.developmentOther.length > 0;
-      }
-      return true;
-    },
-    {
-      message: "Please specify the development name",
-      path: ["developmentOther"],
-    }
-  );
+export const kasheringFormSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Valid email is required"),
+  phone: z.string().min(7, "Phone number is required"),
+  billingAddress: addressSchema,
+  villaAddress: addressSchema,
+  development: z.string().min(1, "Development is required"),
+  developmentOther: z.string().default(""),
+  accessDay: z.string().min(1, "Access day is required"),
+  numBedrooms: z.coerce.number().int().min(1, "Number of bedrooms is required"),
+  numHouses: z.coerce.number().int().min(1, "At least 1 house is required"),
+  shulMembership: z.boolean().default(false),
+  ringSetQty: z.coerce.number().int().min(0).default(0),
+  counterRollQty: z.coerce.number().int().min(0).default(0),
+  donation: z.coerce.number().min(0).default(0),
+  addSurcharge: z.enum(["yes", "no"]).default("no"),
+});
 
 export type KasheringFormValues = z.infer<typeof kasheringFormSchema>;

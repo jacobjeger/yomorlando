@@ -2,16 +2,16 @@ import { z } from "zod";
 
 export const addressSchema = z.object({
   line1: z.string().min(1, "Address is required"),
-  line2: z.string().optional().default(""),
+  line2: z.string().default(""),
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State is required"),
   zip: z.string().min(1, "Zip code is required"),
-  country: z.string().optional().default("US"),
+  country: z.string().default("US"),
 });
 
 export const internationalAddressSchema = z.object({
   line1: z.string().min(1, "Address is required"),
-  line2: z.string().optional().default(""),
+  line2: z.string().default(""),
   city: z.string().min(1, "City is required"),
   state: z.string().min(1, "State/Province is required"),
   zip: z.string().min(1, "Zip/Postal code is required"),
